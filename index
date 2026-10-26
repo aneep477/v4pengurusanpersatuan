@@ -881,4 +881,268 @@
                             </h4>
                             <p class="text-[11px] text-slate-500 mt-1">Satu sampel wajib dikunci bagi setiap pemeriksa completer (dijana dari 100%).</p>
                         </div>
-                        <span id="modSamplesCountBadge" class="font-mono-score text-xs font
+                        <span id="modSamplesCountBadge" class="font-mono-score text-xs font-bold text-blue-800 bg-blue-100 px-3 py-1 rounded-full border border-blue-200">0 Sampel Terkunci</span>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="academic-table" id="moderationSampleTable">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:center; width:35px;">Bil</th>
+                                    <th>Pemeriksa Asal</th>
+                                    <th style="min-width:200px;">Nama Pelajar (Sampel Terpilih)</th>
+                                    <th>No. KP</th>
+                                    <th>Kelas</th>
+                                    <th style="text-align:center;">Markah Asal</th>
+                                    <th style="text-align:center;">Gred</th>
+                                    <th style="text-align:center;">Kelompok (Kohort 100%)</th>
+                                    <th style="text-align:center; width:120px;">Kawalan Kunci</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modSamplesBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 8: SIMULASI SP (SUPER ADMIN) -->
+            <div id="ltab-simulasi" style="display:none;">
+                <div class="academic-card p-6 mb-6 flex justify-between items-center bg-white border-l-4" style="border-left-color:#7c3aed;">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="bg-purple-100 text-purple-800 text-[10px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">Alat Simulasi Statistik</span>
+                            <span class="text-xs text-slate-400 font-mono-score">Khas Super Admin</span>
+                        </div>
+                        <h3 class="font-serif-title text-xl font-bold text-slate-800">Saranan Pintar — Sisihan Piawai (SP)</h3>
+                        <p class="text-[13px] text-slate-500 mt-1">Mencari penyesuaian markah optimum ke sempadan julat gred sedia ada untuk lonjakan SP terbesar, tanpa menukar gred asal mana-mana pelajar.</p>
+                    </div>
+                </div>
+
+                <div class="academic-card p-6 mb-6">
+                    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; align-items:end;">
+                        <div>
+                            <label class="dim-label mb-2">Sasaran Sisihan Piawai (≥)</label>
+                            <input type="number" id="simTargetSP" value="5.0" step="0.1" min="0" class="w-full font-mono-score font-bold">
+                        </div>
+                        <div>
+                            <label class="dim-label mb-2">Had Maksimum Perubahan / Pelajar</label>
+                            <input type="number" id="simMaxDelta" value="5.0" step="0.5" min="0.5" class="w-full font-mono-score font-bold">
+                        </div>
+                        <div>
+                            <label class="dim-label mb-2">Skop Kelas</label>
+                            <select id="simClassFilter" class="w-full text-xs py-3 px-3 bg-slate-50 font-bold border rounded">
+                                <option value="">Semua Kelas</option>
+                            </select>
+                        </div>
+                        <button onclick="janaCadanganPintar()" class="btn-primary py-3 rounded-lg text-[12px]" style="background:#7c3aed; border-color:#7c3aed;">
+                            <i class="fas fa-magic me-2"></i> Jana Cadangan Pintar
+                        </button>
+                    </div>
+                </div>
+
+                <div id="simResultsEmpty" class="academic-card p-12 flex items-center justify-center border-dashed border-2 bg-slate-50 min-h-[300px]">
+                    <div style="text-align:center; color:var(--text-muted);">
+                        <i class="fas fa-flask text-4xl mb-3 opacity-40"></i>
+                        <h4 class="font-serif-title text-lg font-bold text-slate-700 mb-1">Belum Ada Simulasi</h4>
+                        <p style="font-size:13px;">Tetapkan sasaran SP dan tekan "Jana Cadangan Pintar" untuk memulakan pengiraan.</p>
+                    </div>
+                </div>
+
+                <div id="simResults" style="display:none;" class="fade-in">
+                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px;">
+                        <div class="academic-card p-5 text-center" style="border-top:4px solid #94a3b8;">
+                            <div class="dim-label mb-2">SP Sekarang</div>
+                            <div id="simSPBefore" class="font-mono-score" style="font-size:28px; font-weight:800; color:#475569;">--</div>
+                        </div>
+                        <div class="academic-card p-5 text-center" style="border-top:4px solid #7c3aed;">
+                            <div class="dim-label mb-2">SP Selepas Simulasi (Live)</div>
+                            <div id="simSPAfter" class="font-mono-score" style="font-size:28px; font-weight:800; color:#7c3aed;">--</div>
+                        </div>
+                        <div class="academic-card p-5 text-center" style="border-top:4px solid #15803d;">
+                            <div class="dim-label mb-2">Bilangan Pelajar Terlibat</div>
+                            <div id="simCount" class="font-mono-score" style="font-size:28px; font-weight:800; color:#15803d;">0</div>
+                        </div>
+                    </div>
+
+                    <div class="academic-card p-6 mb-6">
+                        <div style="position:relative; width:100%; height:320px;">
+                            <canvas id="simChart"></canvas>
+                        </div>
+                        <p class="text-[11px] text-slate-500 text-center mt-3">Carta Perbandingan Bersebelahan (Sekarang vs Selepas Simulasi). Ketinggian bar yang identikal membuktikan gred asal tidak berubah.</p>
+                    </div>
+
+                    <div class="academic-card p-6">
+                        <div class="flex justify-between items-center mb-4 border-b pb-3">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-purple-700 flex items-center gap-2">
+                                <i class="fas fa-list-check"></i> Senarai Cadangan Penyesuaian
+                            </h4>
+                            <span id="simSuggestBadge" class="font-mono-score text-xs font-bold text-purple-800 bg-purple-100 px-3 py-1 rounded-full border border-purple-200">0 Cadangan</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="academic-table">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:center; width:40px;"><input type="checkbox" id="simSelectAll" onchange="toggleAllSim(this)" checked></th>
+                                        <th>Nama Pelajar</th>
+                                        <th>No. KP</th>
+                                        <th style="text-align:center;">Gred Asal</th>
+                                        <th style="text-align:center;">Markah Asal</th>
+                                        <th style="text-align:center;">Markah Cadangan</th>
+                                        <th style="text-align:center;">Beza ($\Delta$)</th>
+                                        <th style="text-align:center;">Tindakan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="simSuggestBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="alert-warn mt-4">
+                            <i class="fas fa-exclamation-triangle mt-1"></i>
+                            <div><strong>Perhatian:</strong> Ini adalah simulasi langsung. Data tidak akan bertukar dalam pangkalan data sehingga anda menekan "Terapkan Perubahan Dipilih".</div>
+                        </div>
+                        <button onclick="terapkanCadanganSim()" id="btnTerapkanSim" class="btn-primary w-full py-4 rounded-lg text-[14px] mt-3" style="background:#7c3aed; border-color:#7c3aed;">
+                            <i class="fas fa-check-double me-2"></i> Terapkan Perubahan Dipilih ke Pangkalan Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// URL WEB APP GOOGLE APPS SCRIPT ANDA
+const API = "https://script.google.com/macros/s/AKfycbx89KrPdfbC6qc_3l6pZQ4F9LjFMj_Gn8coEIVgba_XpM1dnAJc_8nws7WZt4J4tVpL-w/exec";
+
+let mode = 'student', sData = [], curS = null, curUser = null, curLecEmail = null;
+let peerScores = {}, peerTarget = null, radarChart = null;
+let isAdminUser = false, gradeBarChart = null, simChart = null;
+let window_modSamplesData = [];
+
+let currentSimSuggestions = [];
+let baseSimStats = null;
+let _simOriginalSnapshot = null;
+
+function roundTo1(n) {
+    const v = Number(n);
+    if (isNaN(v)) return 0;
+    return Math.round(v * 10) / 10;
+}
+function fmt1(n) {
+    return roundTo1(n).toFixed(1);
+}
+
+const BAND_MIN = {"A+":90,"A":80,"A-":75,"B+":70,"B":65,"B-":60,"C+":55,"C":50,"C-":40,"D+":30,"D":20,"E":10,"F":0};
+const BAND_MAX = {"A+":96.0,"A":89.9,"A-":79.9,"B+":74.9,"B":69.9,"B-":64.9,"C+":59.9,"C":54.9,"C-":49.9,"D+":39.9,"D":29.9,"E":19.9,"F":9.9};
+
+const GRADE_CHART_COLORS = { 'A+':'#16a34a','A':'#22c55e','A-':'#4ade80','B+':'#2563eb','B':'#3b82f6','B-':'#60a5fa','C+':'#d97706','C':'#f59e0b','C-':'#fbbf24','D+':'#dc2626','D':'#ef4444','E':'#f87171','F':'#7f1d1d' };
+const DIMS = ['Kepimpinan','Autonomi','Tanggungjawab','Penganjuran','Kerjasama'];
+const DIM_COLORS = ['#3b82f6', '#0ea5e9', '#10b981', '#8b5cf6', '#ec4899'];
+
+function normalizeKP(kp) {
+    if (!kp) return "";
+    let clean = kp.toString().trim().replace(/['"\s]/g, '');
+    if (/^\d+$/.test(clean) && clean.length < 12) {
+        clean = clean.padStart(12, '0');
+    }
+    return clean;
+}
+
+function fixDriveUrl(url) { 
+    if (!url) return ""; 
+    let id = url.match(/\/d\/([a-zA-Z0-9_-]+)/)?.[1] || url.match(/[?&]id=([a-zA-Z0-9_-]+)/)?.[1]; 
+    return id ? `https://lh3.googleusercontent.com/d/${id}` : url; 
+}
+
+function loadImage(iEl, pEl, url) { 
+    if (!url) { if(iEl) iEl.style.display='none'; if(pEl) pEl.style.display='flex'; return; } 
+    if(iEl) {
+        iEl.onload = () => { iEl.style.display='block'; if(pEl) pEl.style.display='none'; }; 
+        iEl.onerror = () => { iEl.style.display='none'; if(pEl) pEl.style.display='flex'; }; 
+        iEl.src = fixDriveUrl(url); 
+    }
+}
+
+const RUBRIK_CONFIG = [
+    {
+        id: 'hp1', title: 'TUGASAN 1: Asas & Identiti, Operasi, Artifak (HP1)', max: 30, color: 'var(--hp1-color)', bg:'rgba(67,56,202,0.05)', icon: 'fa-file-alt', prefix: 'r',
+        items: [
+            {no:1, nama:"Pengenalan, Konsep & Rasional", penerangan:"Pengenalan dan konsep, Tujuan, Objektif, dan Rasional penubuhan.", max:5},
+            {no:2, nama:"Logo, Moto & Kepentingan", penerangan:"Rekaan Logo dan Moto Persatuan yang inovatif beserta huraian kepentingan.", max:5},
+            {no:3, nama:"Struktur Organisasi & Perlembagaan", penerangan:"Struktur Jawatankuasa (organisasi) dan Perlembagaan/Peraturan Kelab yang lengkap.", max:5},
+            {no:4, nama:"Takwim Aktiviti Tahunan", penerangan:"Perancangan Takwim Aktiviti Tahunan yang realistik dan berimpak.", max:5},
+            {no:5, nama:"Carta Alir & Surat Penubuhan", penerangan:"Lampiran Fizikal: Carta Alir Penubuhan dan draf Surat Permohonan Penubuhan.", max:5},
+            {no:6, nama:"Analisis Mitigasi Risiko", penerangan:"Analisis mitigasi risiko isu pengurusan persatuan/kelab.", max:5}
+        ]
+    },
+    {
+        id: 'hp5', title: 'TUGASAN 1: Komunikasi Penulisan (HP5)', max: 10, color: 'var(--hp5-color)', bg:'rgba(3,105,161,0.05)', icon: 'fa-pen-nib', prefix: 'g',
+        items: [
+            {no:1, nama:"Kelancaran & Koheren Idea", penerangan:"Aliran perenggan yang lancar, hujah yang logik.", max:2.5},
+            {no:2, nama:"Justifikasi & Keyakinan Hujah", penerangan:"Keupayaan membina wacana yang matang, meyakinkan khalayak akademik.", max:2.5},
+            {no:3, nama:"Keaslian Idea & Laras Bahasa", penerangan:"Esei mempamerkan keaslian idea yang tinggi dan laras bahasa akademik yang tepat.", max:2.5},
+            {no:4, nama:"Ketepatan Tatabahasa & Format", penerangan:"Ketepatan aspek tatabahasa, struktur ayat gramatis, rujukan (APA).", max:2.5}
+        ]
+    },
+    {
+        id: 'hp8', title: 'TUGASAN 2: Kapasiti Kepemimpinan (HP8)', max: 30, color: 'var(--hp8-color)', bg:'rgba(21,128,61,0.05)', icon: 'fa-users-cog', prefix: 'p',
+        items: [
+            {no:1, nama:"Perancangan & Agihan", penerangan:"Kejelasan penyediaan kertas kerja penganjuran. Kecekapan agihan tugas.", max:10},
+            {no:2, nama:"Kepimpinan Lapangan", penerangan:"Keupayaan mengemudi dan mengurus penganjuran aktiviti.", max:10},
+            {no:3, nama:"Akuntabiliti Individu", penerangan:"Menyertakan bukti fizikal penglibatan individu (cth: log tindakan).", max:10}
+        ]
+    },
+    {
+        id: 'hp10', title: 'TUGASAN 2: Minda Keusahawanan (HP10)', max: 30, color: 'var(--hp10-color)', bg:'rgba(180,83,9,0.05)', icon: 'fa-lightbulb', prefix: 'k',
+        items: [
+            {no:1, nama:"Visi & Kreativiti Impak", penerangan:"Wawasan inovasi dalam mencipta nilai. Aktiviti yang dianjurkan kreatif.", max:10},
+            {no:2, nama:"Pengurusan Kewangan", penerangan:"Keupayaan mengendalikan pengurusan dana, modal, atau penajaan.", max:10},
+            {no:3, nama:"Bukti Fizikal Individu", penerangan:"Bukti ketara penglibatan individu dalam elemen keusahawanan.", max:10}
+        ]
+    }
+];
+
+const PEER_Q = [
+    {id:'q1', title:"Kepimpinan", label:"Rakan ini menunjukkan kepimpinan jelas menyelaras tugasan."},
+    {id:'q2', title:"Autonomi", label:"Rakan proaktif dan berinisiatif tanpa perlu diarahkan."},
+    {id:'q3', title:"Tanggungjawab", label:"Rakan penuh akauntabiliti terhadap tugas yang diamanahkan."},
+    {id:'q4', title:"Penganjuran", label:"Rakan merancang dan menganjur secara tersusun &amp; sistematik."},
+    {id:'q5', title:"Kerjasama", label:"Rakan bekerjasama baik dan menyumbang aktif kepada kumpulan."}
+];
+
+function showToast(msg, type='success') { 
+    const t = document.getElementById('toast'), m = document.getElementById('toastMsg'); 
+    if(!t || !m) return;
+    const icon = type === 'success' ? 'fa-check-circle text-green-600' : 'fa-exclamation-triangle text-amber-600'; 
+    const bColor = type === 'success' ? 'var(--hp8-color)' : 'var(--hp10-color)'; 
+    t.style.borderLeftColor = bColor; 
+    m.innerHTML = `<i class="fas ${icon} text-lg"></i><span class="text-slate-700">${msg}</span>`; 
+    t.classList.add('show'); 
+    setTimeout(() => t.classList.remove('show'), 3200); 
+}
+
+function calculateGred(m) { 
+    if (m>=90) return "A+"; if (m>=80) return "A"; if (m>=75) return "A-"; 
+    if (m>=70) return "B+"; if (m>=65) return "B"; if (m>=60) return "B-"; 
+    if (m>=55) return "C+"; if (m>=50) return "C"; if (m>=40) return "C-"; 
+    if (m>=30) return "D+"; if (m>=20) return "D"; if (m>=10) return "E"; 
+    return "F"; 
+}
+
+function setType(t) { 
+    mode = t; 
+    const tsBtn = document.getElementById('ts');
+    const tlBtn = document.getElementById('tl');
+    const pwField = document.getElementById('pwField');
+    if (tsBtn) tsBtn.classList.toggle('active', t === 'student'); 
+    if (tlBtn) tlBtn.classList.toggle('active', t === 'lecturer'); 
+    if (pwField) pwField.className = t === 'student' ? 'hidden' : 'block mt-4'; 
+}
+
+async function handleAuth() {
+    const idIn = document.getElementById('idIn');
+    const pwIn = document.getElementById('pwIn');
+    const id = idIn ? idIn.value.trim() : '';
+    const pw = pwIn ? pwIn.value : '';
+    if (!id) return showToast('Sila masukkan kad pengenalan atau emel!', 'warn');
+    const btn = document.getElementById('loginBtn'); 
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Mengesahkan...';
