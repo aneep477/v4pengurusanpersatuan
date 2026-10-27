@@ -8,15 +8,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            --primary: #0f172a;       
-            --primary-accent: #1e3a8a;
-            --secondary: #9f1239;     
-            --gold-accent: #d97706;   
+            --primary: #1e3a8a;    
+            --primary-hover: #1e40af;
+            --secondary: #9f1239;  
             
             --hp1-color: #4338ca;  
             --hp5-color: #0369a1;  
@@ -30,9 +29,9 @@
             --text-main: #0f172a;  
             --text-muted: #64748b; 
             --border: #e2e8f0;     
-            --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -1px rgba(15, 23, 42, 0.04);
-            --shadow-lg: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -40,24 +39,22 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-body); min-height: 100vh; color: var(--text-main); }
         .font-serif-title { font-family: 'Lora', serif; }
         .font-mono-score { font-family: 'Space Mono', monospace; }
-        
         .shell { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1.5rem; }
-        .academic-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 0.85rem; box-shadow: var(--shadow-sm); transition: all 0.2s ease-in-out; }
+        .academic-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 1rem; box-shadow: var(--shadow-sm); }
         
-        .btn-primary { background: var(--primary-accent); border: 1px solid var(--primary-accent); cursor: pointer; transition: all 0.2s ease-in-out; color: white; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; box-shadow: var(--shadow-sm); }
-        .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+        .btn-primary { background: var(--primary); border: 1px solid var(--primary); cursor: pointer; transition: all 0.2s ease-in-out; color: white; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; box-shadow: var(--shadow-sm); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-md); }
         .btn-primary:disabled { background: #94a3b8; border-color: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
-        
         .btn-outline { background: transparent; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; }
-        .btn-outline:hover { border-color: var(--primary-accent); color: var(--primary-accent); background: #f8fafc; }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: #f8fafc; }
 
-        .tab-bar { display: flex; gap: 6px; background: var(--bg-alt); padding: 5px; border-radius: 0.75rem; border: 1px solid var(--border); }
-        .tab { flex: 1; padding: 10px 14px; border-radius: 0.5rem; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; background: transparent; border: none; color: var(--text-muted); }
-        .tab.active { background: var(--bg-surface); color: var(--primary-accent); box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+        .tab-bar { display: flex; gap: 6px; background: var(--bg-alt); padding: 6px; border-radius: 0.75rem; border: 1px solid var(--border); }
+        .tab { flex: 1; padding: 10px; border-radius: 0.5rem; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; background: transparent; border: none; color: var(--text-muted); }
+        .tab.active { background: var(--bg-surface); color: var(--primary); box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
 
         .likert-group { display: flex; gap: 6px; }
         .likert-btn { flex: 1; padding: 12px 4px; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--bg-surface); cursor: pointer; font-size: 12px; font-weight: 700; color: var(--text-muted); transition: all 0.2s; text-align: center; }
-        .likert-btn:hover { border-color: var(--primary-accent); color: var(--primary-accent); background: #eff6ff; }
+        .likert-btn:hover { border-color: var(--primary); color: var(--primary); background: #f0fdfa; }
         .likert-btn.sel-1 { background: #fef2f2; border-color: #ef4444; color: #b91c1c; }
         .likert-btn.sel-2 { background: #fffbeb; border-color: #f59e0b; color: #b45309; }
         .likert-btn.sel-3 { background: #fefce8; border-color: #eab308; color: #a16207; }
@@ -66,7 +63,7 @@
 
         .s-card { padding: 14px 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 0.75rem; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; border-left: 4px solid transparent; }
         .s-card:hover { background: var(--bg-alt); border-left-color: #94a3b8; }
-        .s-card.selected { background: #eff6ff; border-left-color: var(--primary-accent); border-color: #bfdbfe; }
+        .s-card.selected { background: #eff6ff; border-left-color: var(--primary); border-color: #bfdbfe; }
         .s-card.done { border-left-color: var(--hp8-color); }
 
         .scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -75,13 +72,13 @@
         .scroll-thin::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         input[type=number], input[type=text], input[type=password], textarea, select { background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-main); outline: none; transition: all 0.2s; border-radius: 0.5rem; padding: 0.75rem 1rem; }
-        input:focus, textarea:focus, select:focus { border-color: var(--primary-accent); box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12); }
+        input:focus, textarea:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
         input:disabled { background: var(--bg-alt); color: var(--text-muted); cursor: not-allowed; }
 
-        .alert-info { padding: 14px 18px; border-radius: 0.6rem; font-size: 13px; font-weight: 600; display: flex; align-items: flex-start; gap: 12px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
-        .alert-warn { padding: 14px 18px; border-radius: 0.6rem; font-size: 13px; font-weight: 600; display: flex; align-items: flex-start; gap: 12px; background: #fffbeb; border: 1px solid #fde68a; color: #b45309; }
+        .alert-info { padding: 12px 16px; border-radius: 0.5rem; font-size: 13px; font-weight: 600; display: flex; align-items: flex-start; gap: 10px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+        .alert-warn { padding: 12px 16px; border-radius: 0.5rem; font-size: 13px; font-weight: 600; display: flex; align-items: flex-start; gap: 10px; background: #fffbeb; border: 1px solid #fde68a; color: #b45309; }
 
-        #toast { position: fixed; top: 24px; right: 24px; z-index: 9999; transform: translateX(140%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        #toast { position: fixed; top: 24px; right: 24px; z-index: 9999; transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         #toast.show { transform: translateX(0); }
 
         .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; vertical-align: middle; }
@@ -94,15 +91,15 @@
         .q-block { padding: 20px; border-radius: 0.75rem; background: var(--bg-surface); border: 1px solid var(--border); margin-bottom: 16px; box-shadow: var(--shadow-sm); }
         .dim-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 6px; display: block; }
 
-        .disclaimer-bar { background: #0f172a; border-bottom: 2px solid var(--gold-accent); padding: 10px 24px; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 11px; color: #f8fafc; letter-spacing: 0.02em; text-align: center; flex-wrap: wrap; position: sticky; top: 0; z-index: 100; }
+        .disclaimer-bar { background: #1e293b; border-bottom: 2px solid var(--secondary); padding: 10px 24px; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 11px; color: #f8fafc; letter-spacing: 0.02em; text-align: center; flex-wrap: wrap; position: sticky; top: 0; z-index: 100; }
         .disclaimer-bar strong { color: #facc15; font-weight: 700; }
         .disclaimer-bar .sep { opacity: 0.3; margin: 0 4px; }
 
         .disclaimer-footer { background: #f1f5f9; border-top: 1px solid var(--border); padding: 24px; text-align: center; font-size: 11px; color: var(--text-muted); line-height: 1.8; margin-top: auto; }
 
         .academic-table { width: 100%; border-collapse: collapse; font-size: 12.5px; background: var(--bg-surface); }
-        .academic-table th { background: var(--bg-alt); padding: 12px; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 2px solid var(--border); border-top: 1px solid var(--border); }
-        .academic-table td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text-main); }
+        .academic-table th { background: var(--bg-alt); padding: 12px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 2px solid var(--border); border-top: 1px solid var(--border); }
+        .academic-table td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-main); }
         .academic-table tr:last-child td { border-bottom: none; }
         .academic-table tbody tr:hover { background: #f8fafc; }
 
@@ -135,28 +132,25 @@
 </head>
 <body>
 
-<!-- BAR NOTIS KESELAMATAN & STATUS SULIT -->
 <div class="disclaimer-bar" id="globalDisclaimer">
-    <i class="fas fa-shield-alt" style="color:#facc15; font-size:14px;"></i>
+    <i class="fas fa-landmark" style="color:#facc15; font-size:14px;"></i>
     <span style="flex:1;">
         <strong>SISTEM MAKLUMAT SULIT & TERHAD</strong>
         <span class="sep">|</span> Kegunaan Rasmi <strong>Unit Kokurikulum IPGKDA</strong>
-        <span class="sep">|</span> Kod Kursus: <strong>MPU3221 (Pengurusan Persatuan)</strong>
+        <span class="sep">|</span> Kod Kursus: <strong>MPU3221</strong>
     </span>
     <button onclick="document.getElementById('globalDisclaimer').style.display='none'" style="background:none; border:none; color:white; cursor:pointer; font-size:16px; padding:0 4px;"><i class="fas fa-times"></i></button>
 </div>
 
-<!-- CONTAINER TOAST NOTIFICATION -->
 <div id="toast">
     <div class="academic-card px-5 py-4 flex items-center gap-3 text-sm font-bold shadow-lg" id="toastMsg" style="border-left: 4px solid var(--hp8-color);"></div>
 </div>
 
-<!-- SKRIN LOG MASUK UTAMA -->
 <div class="shell" id="loginScreen">
-    <div class="academic-card w-full shadow-2xl p-8 sm:p-10 border-t-4" style="max-width:440px; border-top-color: var(--primary-accent);">
+    <div class="academic-card w-full shadow-2xl p-8 sm:p-10 border-t-4" style="max-width:440px; border-top-color: var(--primary);">
         <div class="text-center mb-8">
             <div style="display:inline-flex; align-items:center; justify-content:center; width:90px; height:90px; margin-bottom:12px;">
-                <img src="https://lh3.googleusercontent.com/d/10kap54x0sqPu4bFZdju9P2fXKMpyMVi8" referrerpolicy="no-referrer" crossorigin="anonymous" alt="Logo IPGKDA" style="max-width:100%; max-height:100%; object-fit:contain;" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\\'fas fa-university\\' style=\\'font-size:2.5rem; color:var(--primary-accent);\\'></i>';">
+                <img src="https://lh3.googleusercontent.com/d/10kap54x0sqPu4bFZdju9P2fXKMpyMVi8" referrerpolicy="no-referrer" crossorigin="anonymous" alt="Logo IPGKDA" style="max-width:100%; max-height:100%; object-fit:contain;" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\\'fas fa-university\\' style=\\'font-size:2.5rem; color:var(--primary);\\'></i>';">
             </div>
             
             <div style="font-size:10px; font-weight:800; letter-spacing:0.15em; color:var(--secondary); text-transform:uppercase; margin-bottom:8px;">
@@ -193,11 +187,10 @@
     </div>
 </div>
 
-<!-- DASHBOARD PELAJAR -->
 <div id="studentDash" style="display:none; min-height:100vh; flex-direction:column;">
     <div style="background:var(--bg-surface); border-bottom:1px solid var(--border); padding:16px 32px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; box-shadow:var(--shadow-sm);">
         <div style="display:flex; align-items:center; gap:16px;">
-            <div style="width:40px; height:40px; background:var(--bg-alt); border: 1px solid var(--border); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--primary-accent);">
+            <div style="width:40px; height:40px; background:var(--bg-alt); border: 1px solid var(--border); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--primary);">
                 <i class="fas fa-user-graduate"></i>
             </div>
             <div>
@@ -217,7 +210,7 @@
 
     <div id="stab-profile" style="padding:24px 32px; flex:1; display:flex; flex-wrap:wrap; gap:24px;">
         <div class="academic-card p-8 flex-1 min-w-[300px]">
-            <div style="font-size:11px; font-weight:800; letter-spacing:0.1em; color:var(--primary-accent); text-transform:uppercase; margin-bottom:24px; border-bottom:2px solid var(--bg-alt); padding-bottom:12px;">Maklumat Pendaftaran Rasmi</div>
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.1em; color:var(--primary); text-transform:uppercase; margin-bottom:24px; border-bottom:2px solid var(--bg-alt); padding-bottom:12px;">Maklumat Pendaftaran Rasmi</div>
             
             <div class="space-y-6">
                 <div>
@@ -290,7 +283,7 @@
                         </div>
                         <div>
                             <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:2px;">Penilaian Borang HP8 Untuk:</div>
-                            <div id="peerName" class="font-serif-title" style="font-size:22px; font-weight:700; color:var(--primary-accent);">--</div>
+                            <div id="peerName" class="font-serif-title" style="font-size:22px; font-weight:700; color:var(--primary);">--</div>
                             <div id="peerKlass" class="font-mono-score" style="font-size:12px; color:var(--text-muted); margin-top:4px;">--</div>
                         </div>
                         <div id="peerDoneTag" style="margin-left:auto; display:none;">
@@ -321,11 +314,10 @@
     </div>
 </div>
 
-<!-- DASHBOARD PENSYARAH & ADMIN -->
 <div id="lecturerDash" style="display:none; min-height:100vh; flex-direction:column;">
     <div style="background:var(--primary); color:white; padding:16px 32px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; box-shadow:var(--shadow-md);">
         <div style="display:flex; align-items:center; gap:16px;">
-            <div style="width:40px; height:40px; background:rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px;">
+            <div style="width:40px; height:40px; background:rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px;">
                 <i class="fas fa-chalkboard-teacher"></i>
             </div>
             <div>
@@ -339,7 +331,7 @@
         <button onclick="logout()" class="btn-outline px-4 py-2 rounded-lg" style="border-color:rgba(255,255,255,0.3); color:white;"><i class="fas fa-sign-out-alt me-1"></i> Log Keluar</button>
     </div>
 
-    <!-- Navigasi Utama Pensyarah -->
+    <!-- Navigasi Pensyarah -->
     <div style="padding:24px 32px 0; background:white; border-bottom:1px solid var(--border);">
         <div class="tab-bar" style="max-width:1100px; background:transparent; border:none; padding:0; gap:10px; margin-bottom:-1px; overflow-x:auto;">
             <button class="tab active" onclick="showLecTab('marking')" style="border-radius:0; border-bottom:3px solid transparent; padding:12px 12px; font-size:11px;"><i class="fas fa-calculator me-1"></i> Pemarkahan Induk</button>
@@ -352,12 +344,12 @@
             <button class="tab" id="tabBtnSimulasi" onclick="showLecTab('simulasi')" style="display:none; border-radius:0; border-bottom:3px solid transparent; padding:12px 12px; font-size:11px; color:#7c3aed;"><i class="fas fa-flask me-1"></i> Simulasi SP</button>
         </div>
         <style>
-            #lecturerDash .tab-bar .tab.active { background:transparent; color:var(--primary-accent); border-bottom-color:var(--primary-accent); box-shadow:none; }
+            #lecturerDash .tab-bar .tab.active { background:transparent; color:var(--primary); border-bottom-color:var(--primary); box-shadow:none; }
             #lecturerDash .tab-bar .tab:hover:not(.active) { background:var(--bg-body); color:var(--text-main); border-bottom-color:var(--border); }
         </style>
     </div>
 
-    <!-- NOTIS MODERASI INDIVIDU PENSYARAH -->
+    <!-- KAD NOTIS MODERASI INDIVIDU PENSYARAH -->
     <div id="lecModerationNoticeCard" style="display:none; padding:16px 32px 0;"></div>
 
     <div style="padding:24px 32px; display:grid; grid-template-columns:320px 1fr; gap:24px; flex:1;">
@@ -365,7 +357,7 @@
         <div class="academic-card p-4" style="align-self: start; position: sticky; top: 110px; max-height: calc(100vh - 130px); display: flex; flex-direction: column;">
             <div style="font-size:11px; font-weight:800; color:var(--text-main); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; padding:0 4px; display:flex; justify-content:space-between; align-items:center;">
                 <span>Senarai Calon</span>
-                <span id="classInfo" class="font-mono-score" style="color:var(--primary-accent); font-size:11px; background:var(--bg-alt); padding:2px 8px; border-radius:12px;"></span>
+                <span id="classInfo" class="font-mono-score" style="color:var(--primary); font-size:11px; background:var(--bg-alt); padding:2px 8px; border-radius:12px;"></span>
             </div>
             <div class="mb-3 px-1 flex flex-col gap-2">
                 <select id="classFilter" onchange="onClassFilterChange()" class="w-full text-xs py-2 px-3 bg-slate-50 font-bold border rounded">
@@ -377,7 +369,6 @@
         </div>
 
         <div style="min-width: 0;">
-            <!-- TAB 1: PEMARKAHAN INDUK -->
             <div id="ltab-marking">
                 <div id="gradingEmpty" class="academic-card p-12 flex items-center justify-center border-dashed border-2 bg-slate-50 min-h-[500px]">
                     <div style="text-align:center; color:var(--text-muted);">
@@ -397,7 +388,7 @@
                         </div>
                         <div style="flex:1;">
                             <div style="font-size:10px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Calon Dinilai</div>
-                            <div id="ln" class="font-serif-title" style="font-size:22px; font-weight:700; color:var(--primary-accent); line-height:1.2;">--</div>
+                            <div id="ln" class="font-serif-title" style="font-size:22px; font-weight:700; color:var(--primary); line-height:1.2;">--</div>
                             <div id="lk" class="font-mono-score" style="font-size:13px; color:var(--text-muted); margin-top:6px; display:inline-block; background:var(--bg-body); padding:2px 8px; border:1px solid var(--border); border-radius:4px;">--</div>
                         </div>
                         
@@ -412,7 +403,7 @@
                         </div>
                     </div>
 
-                    <div class="alert-info mb-6 shadow-sm border-l-4" style="border-left-color: var(--primary-accent);">
+                    <div class="alert-info mb-6 shadow-sm border-l-4" style="border-left-color: var(--primary);">
                         <i class="fas fa-lightbulb text-lg mt-1"></i>
                         <div>
                             <strong style="display:block; font-size:13px; margin-bottom:4px;">Integrasi Automatik</strong>
@@ -429,7 +420,7 @@
                             </div>
                             <div class="mb-5">
                                 <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                                    <label class="dim-label" style="margin:0; color:var(--hp1-color);">HP1 — Pengetahuan</label>
+                                    <label class="dim-label" style="margin:0; color:var(--hp1-color);">HP1 — Pengetahuan </label>
                                     <span style="font-size:10px; color:var(--text-muted);">Max: 30</span>
                                 </div>
                                 <input type="number" id="h1" step="0.1" oninput="calc()" min="0" max="30" class="w-full font-mono-score text-xl font-bold bg-white" style="color:var(--hp1-color); border-color:rgba(67, 56, 202, 0.3);">
@@ -468,14 +459,14 @@
 
                     <div class="academic-card p-8 flex justify-between items-center bg-slate-900 text-white" style="border:none;">
                         <div>
-                            <div style="font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px; opacity:0.8;">Pencapaian Keseluruhan</div>
+                            <div style="font-size:12px; color:slate-400; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px; opacity:0.8;">Pencapaian Keseluruhan</div>
                             <div style="display:flex; align-items:baseline; gap:12px;">
                                 <span id="tm" class="font-mono-score" style="font-size:56px; font-weight:800; line-height:1; color:#38bdf8;">0.0</span>
                                 <span style="font-size:20px; font-weight:600; color:rgba(255,255,255,0.5);">/ 100</span>
                             </div>
                         </div>
                         <div style="text-align:right; border-left:1px solid rgba(255,255,255,0.2); padding-left:32px;">
-                            <div style="font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px; opacity:0.8;">Gred Rasmi</div>
+                            <div style="font-size:12px; color:slate-400; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px; opacity:0.8;">Gred Rasmi</div>
                             <div id="gd" class="font-serif-title" style="font-size:64px; font-weight:700; line-height:1; color:#facc15; text-shadow: 0 4px 10px rgba(0,0,0,0.3);">F</div>
                         </div>
                     </div>
@@ -498,7 +489,6 @@
                 </div>
             </div>
 
-            <!-- TAB 2: PANEL RUBRIK -->
             <div id="ltab-rubrik" style="display:none;">
                 <div id="rubrikLecEmpty" class="academic-card p-12 flex items-center justify-center border-dashed border-2 bg-slate-50 min-h-[500px]">
                     <div style="text-align:center; color:var(--text-muted);">
@@ -529,7 +519,7 @@
 
                     <div id="lecRubrikContainer" class="space-y-6"></div>
 
-                    <div class="academic-card p-6 mt-6 bg-slate-50 border-t-4" style="border-top-color: var(--primary-accent);">
+                    <div class="academic-card p-6 mt-6 bg-slate-50 border-t-4" style="border-top-color: var(--primary);">
                         <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px; text-align:center;">
                             Sila pastikan semua ruangan telah diisi dengan teliti. Menekan butang ini akan mengemas kini markah dalam pangkalan data.
                         </p>
@@ -540,7 +530,6 @@
                 </div>
             </div>
 
-            <!-- TAB 3: ANALISIS RAKAN -->
             <div id="ltab-peer" style="display:none;">
                 <div id="radarEmpty" class="academic-card p-12 flex items-center justify-center border-dashed border-2 bg-slate-50 min-h-[500px]">
                     <div style="text-align:center; color:var(--text-muted);">
@@ -554,10 +543,10 @@
                 
                 <div id="radarContent" style="display:none;" class="fade-in">
                     <div class="academic-card p-8 mb-6">
-                        <div class="flex justify-between items-start border-b pb-4 border-slate-200 mb-6">
+                        <div class="flex justify-between items-start border-bottom pb-4 border-slate-200 mb-6 border-b">
                             <div>
                                 <h3 class="font-serif-title text-2xl font-bold text-slate-800">Pemprofilan Kepimpinan (HP8)</h3>
-                                <div id="radarStudentName" class="text-sm font-bold text-primary-accent mt-2">--</div>
+                                <div id="radarStudentName" class="text-sm font-bold text-primary mt-2" style="color:var(--primary);">--</div>
                                 <div id="radarMeta" class="font-mono-score text-xs text-slate-500 mt-1">--</div>
                             </div>
                             <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-center min-w-[120px]">
@@ -590,7 +579,6 @@
                 </div>
             </div>
 
-            <!-- TAB 4: BUKU REKOD -->
             <div id="ltab-summary" style="display:none;">
                 <div class="academic-card p-6">
                     <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
@@ -629,7 +617,7 @@
                 </div>
             </div>
 
-            <!-- TAB 5: LAPORAN RUMUSAN -->
+            <!-- TAB LAPORAN RUMUSAN DENGAN SORTING & LIST TERPERINCI -->
             <div id="ltab-laporan" style="display:none;">
                 <div class="academic-card p-6 mb-6 flex justify-between items-center bg-white border-l-4" style="border-left-color: var(--secondary);">
                     <div>
@@ -674,9 +662,9 @@
                             </div>
                         </div>
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-                            <div class="academic-card p-6 text-center" style="border-top:4px solid var(--primary-accent);">
+                            <div class="academic-card p-6 text-center" style="border-top:4px solid var(--primary);">
                                 <div class="dim-label mb-2">MIN</div>
-                                <div id="gradeMinVal" class="font-mono-score" style="font-size:32px; font-weight:800; color:var(--primary-accent);">--</div>
+                                <div id="gradeMinVal" class="font-mono-score" style="font-size:32px; font-weight:800; color:var(--primary);">--</div>
                             </div>
                             <div class="academic-card p-6 text-center" style="border-top:4px solid var(--secondary);">
                                 <div class="dim-label mb-2">Sisihan Piawai</div>
@@ -690,6 +678,7 @@
                     </div>
                 </div>
 
+                <!-- SENARAI PELAJAR DENGAN SORTING & FILTERING -->
                 <div class="academic-card p-6" id="laporanStudentSection">
                     <div class="flex justify-between items-center mb-6 flex-wrap gap-4 border-b pb-4">
                         <div>
@@ -747,7 +736,6 @@
                 </div>
             </div>
 
-            <!-- TAB 6: STATUS RAKAN -->
             <div id="ltab-peerstatus" style="display:none;">
                 <div class="academic-card p-6 mb-6 flex justify-between items-center bg-white border-l-4" style="border-left-color: var(--hp8-color);">
                     <div>
@@ -763,9 +751,9 @@
                 </div>
 
                 <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
-                    <div class="academic-card p-5 text-center" style="border-top:4px solid var(--primary-accent);">
+                    <div class="academic-card p-5 text-center" style="border-top:4px solid var(--primary);">
                         <div class="dim-label mb-2">Jumlah Pelajar</div>
-                        <div id="psTotal" class="font-mono-score" style="font-size:30px; font-weight:800; color:var(--primary-accent);">0</div>
+                        <div id="psTotal" class="font-mono-score" style="font-size:30px; font-weight:800; color:var(--primary);">0</div>
                     </div>
                     <div class="academic-card p-5 text-center" style="border-top:4px solid var(--hp8-color);">
                         <div class="dim-label mb-2">Selesai Sepenuhnya</div>
@@ -799,7 +787,6 @@
                 </div>
             </div>
 
-            <!-- TAB 7: MODERASI LAM-PT-04-02 (SUPER ADMIN) -->
             <div id="ltab-moderasi" style="display:none;">
                 <div class="academic-card p-6 mb-6 flex justify-between items-center bg-white border-l-4" style="border-left-color: #b45309;">
                     <div>
@@ -819,8 +806,9 @@
                     </div>
                 </div>
 
+                <!-- Kad Statistik Kelompok -->
                 <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:14px; margin-bottom:24px;">
-                    <div class="academic-card p-4 text-center" style="border-top:4px solid var(--primary-accent);">
+                    <div class="academic-card p-4 text-center" style="border-top:4px solid var(--primary);">
                         <div class="dim-label mb-1">Status Menanda</div>
                         <div id="modExaminerStats" class="font-mono-score text-xl font-black text-blue-900">0 / 0</div>
                         <div class="text-[10px] text-slate-500 font-bold mt-1">Pemeriksa 100% Selesai</div>
@@ -847,6 +835,7 @@
                     </div>
                 </div>
 
+                <!-- Jadual Kes Ekstrem -->
                 <div class="academic-card p-6 mb-6">
                     <div class="flex justify-between items-center mb-4 border-b pb-3">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-red-700 flex items-center gap-2">
@@ -873,6 +862,7 @@
                     </div>
                 </div>
 
+                <!-- Jadual 13 Sampel Moderasi Manual -->
                 <div class="academic-card p-6">
                     <div class="flex justify-between items-center mb-4 border-b pb-3">
                         <div>
@@ -905,7 +895,6 @@
                 </div>
             </div>
 
-            <!-- TAB 8: SIMULASI SP (SUPER ADMIN) -->
             <div id="ltab-simulasi" style="display:none;">
                 <div class="academic-card p-6 mb-6 flex justify-between items-center bg-white border-l-4" style="border-left-color:#7c3aed;">
                     <div>
@@ -914,7 +903,7 @@
                             <span class="text-xs text-slate-400 font-mono-score">Khas Super Admin</span>
                         </div>
                         <h3 class="font-serif-title text-xl font-bold text-slate-800">Saranan Pintar — Sisihan Piawai (SP)</h3>
-                        <p class="text-[13px] text-slate-500 mt-1">Mencari penyesuaian markah optimum ke sempadan julat gred sedia ada untuk lonjakan SP terbesar, tanpa menukar gred asal mana-mana pelajar.</p>
+                        <p class="text-[13px] text-slate-500 mt-1">Mencari penyesuaian markah optimum ke sempadan julat gred sedia ada untuk lonjakan SP terbesar, tanpa menukar gred asal mana-mana pelajar (maksimum 96.0%).</p>
                     </div>
                 </div>
 
@@ -988,7 +977,7 @@
                                         <th style="text-align:center;">Gred Asal</th>
                                         <th style="text-align:center;">Markah Asal</th>
                                         <th style="text-align:center;">Markah Cadangan</th>
-                                        <th style="text-align:center;">Beza ($\Delta$)</th>
+                                        <th style="text-align:center;">Beza (&Delta;)</th>
                                         <th style="text-align:center;">Tindakan</th>
                                     </tr>
                                 </thead>
@@ -1010,18 +999,19 @@
 </div>
 
 <script>
-// URL WEB APP GOOGLE APPS SCRIPT ANDA
-const API = "https://script.google.com/macros/s/AKfycbx89KrPdfbC6qc_3l6pZQ4F9LjFMj_Gn8coEIVgba_XpM1dnAJc_8nws7WZt4J4tVpL-w/exec";
+const API = "https://script.google.com/macros/s/AKfycbyqIBEP88lwlx0BfM_CX9HG82p_sOAj89bBuqTpq1ox1glhSYZ5DGDLBK4-PZZJ8E10Zg/exec";
 
 let mode = 'student', sData = [], curS = null, curUser = null, curLecEmail = null;
 let peerScores = {}, peerTarget = null, radarChart = null;
 let isAdminUser = false, gradeBarChart = null, simChart = null;
 let window_modSamplesData = [];
 
+// KONFIGURASI SIMULASI SP
 let currentSimSuggestions = [];
 let baseSimStats = null;
 let _simOriginalSnapshot = null;
 
+// PEMBANTU PEMBUNDARAN 1 TITIK PERPULUHAN (digunakan di seluruh sistem)
 function roundTo1(n) {
     const v = Number(n);
     if (isNaN(v)) return 0;
@@ -1031,6 +1021,7 @@ function fmt1(n) {
     return roundTo1(n).toFixed(1);
 }
 
+// HAD MAKSIMUM MARKAH CADANGAN A+ ADALAH 96.0%
 const BAND_MIN = {"A+":90,"A":80,"A-":75,"B+":70,"B":65,"B-":60,"C+":55,"C":50,"C-":40,"D+":30,"D":20,"E":10,"F":0};
 const BAND_MAX = {"A+":96.0,"A":89.9,"A-":79.9,"B+":74.9,"B":69.9,"B-":64.9,"C+":59.9,"C":54.9,"C-":49.9,"D+":39.9,"D":29.9,"E":19.9,"F":9.9};
 
@@ -1117,16 +1108,10 @@ function showToast(msg, type='success') {
     t.style.borderLeftColor = bColor; 
     m.innerHTML = `<i class="fas ${icon} text-lg"></i><span class="text-slate-700">${msg}</span>`; 
     t.classList.add('show'); 
-    setTimeout(() => t.classList.remove('show'), 3200); 
+    setTimeout(() => t.classList.remove('show'), 3000); 
 }
 
-function calculateGred(m) { 
-    if (m>=90) return "A+"; if (m>=80) return "A"; if (m>=75) return "A-"; 
-    if (m>=70) return "B+"; if (m>=65) return "B"; if (m>=60) return "B-"; 
-    if (m>=55) return "C+"; if (m>=50) return "C"; if (m>=40) return "C-"; 
-    if (m>=30) return "D+"; if (m>=20) return "D"; if (m>=10) return "E"; 
-    return "F"; 
-}
+function calculateGred(m) { if (m>=90) return "A+"; if (m>=80) return "A"; if (m>=75) return "A-"; if (m>=70) return "B+"; if (m>=65) return "B"; if (m>=60) return "B-"; if (m>=55) return "C+"; if (m>=50) return "C"; if (m>=40) return "C-"; if (m>=30) return "D+"; if (m>=20) return "D"; return "F"; }
 
 function setType(t) { 
     mode = t; 
@@ -1143,7 +1128,7 @@ async function handleAuth() {
     const pwIn = document.getElementById('pwIn');
     const id = idIn ? idIn.value.trim() : '';
     const pw = pwIn ? pwIn.value : '';
-    if (!id) return showToast('Sila masukkan kad pengenalan atau emel!', 'warn');
+    if (!id) return showToast('Sila masukkan maklumat!', 'warn');
     const btn = document.getElementById('loginBtn'); 
     if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Mengesahkan...'; }
     try {
@@ -1154,7 +1139,7 @@ async function handleAuth() {
             const r = await fetch(`${API}?action=lecturerLogin&email=${encodeURIComponent(id)}&pass=${encodeURIComponent(pw)}`); const o = await r.json();
             if (o.status === "success") { curLecEmail = id; localStorage.setItem('le', id); localStorage.setItem('leName', o.name || id); localStorage.setItem('leAdmin', o.isAdmin ? '1' : '0'); initLecturer(id, o.name, o.isAdmin); } else showToast(o.message, 'warn');
         }
-    } catch (e) { showToast('Ralat sambungan rangkaian ke pelayan.', 'warn'); }
+    } catch (e) { showToast('Ralat rangkaian', 'warn'); }
     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i> Akses Sistem'; }
 }
 
@@ -1203,7 +1188,7 @@ async function loadPeerList() {
             }).join('');
         }
     } catch (e) {
-        showToast('Gagal memuat senarai rakan sekelas.', 'warn');
+        showToast('Gagal memuat senarai rakan.', 'warn');
     }
 }
 
@@ -1212,7 +1197,7 @@ function renderPeerQuestions() {
         <div class="q-block" id="qb-${q.id}">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
                 <div>
-                    <div class="dim-label"><span style="color:var(--primary-accent); margin-right:4px;">Q${i+1}</span> ${q.title}</div>
+                    <div class="dim-label"><span style="color:var(--primary); margin-right:4px;">Q${i+1}</span> ${q.title}</div>
                     <div style="font-size:13px; font-weight:600; color:var(--text-main); line-height:1.4;">${q.label}</div>
                 </div>
             </div>
@@ -1303,8 +1288,8 @@ async function submitPeerEval() {
             q1: peerScores.q1, q2: peerScores.q2, q3: peerScores.q3, q4: peerScores.q4, q5: peerScores.q5,
             note: document.getElementById('peerNote').value.trim()
         };
-        await fetch(API, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
-        await new Promise(res => setTimeout(res, 1200));
+        const r = await fetch(API, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
+        await new Promise(res => setTimeout(res, 1000));
         showToast('Penilaian rakan berjaya direkodkan.', 'success');
         loadPeerList();
         document.getElementById('peerPanel').style.display = 'none';
@@ -1361,10 +1346,8 @@ async function hUp() {
 }
 
 async function initLecturer(email, name, isAdminFlag) {
-    document.getElementById('loginScreen').style.display='none'; 
-    document.getElementById('lecturerDash').style.display='flex'; 
-    document.getElementById('lecName').textContent = name || email; 
-    curLecEmail = email;
+    document.getElementById('loginScreen').style.display='none'; document.getElementById('lecturerDash').style.display='flex'; 
+    document.getElementById('lecName').textContent=name||email; curLecEmail=email;
     isAdminUser = isAdminFlag !== undefined ? !!isAdminFlag : (localStorage.getItem('leAdmin') === '1');
     
     document.getElementById('adminBadge').style.display = isAdminUser ? 'inline-block' : 'none';
@@ -1374,26 +1357,15 @@ async function initLecturer(email, name, isAdminFlag) {
     if (simTabBtn) simTabBtn.style.display = isAdminUser ? 'inline-block' : 'none';
 
     try {
-        const r = await fetch(`${API}?action=getLecturerStudents&email=${encodeURIComponent(email)}`); 
-        const o = await r.json();
-        if (o.status === 'success') {
-            sData = o.data || []; 
-            if (typeof o.isAdmin === 'boolean') isAdminUser = o.isAdmin;
-            document.getElementById('adminBadge').style.display = isAdminUser ? 'inline-block' : 'none';
-            if (modTabBtn) modTabBtn.style.display = isAdminUser ? 'inline-block' : 'none';
-            if (simTabBtn) simTabBtn.style.display = isAdminUser ? 'inline-block' : 'none';
-            renderLecStudentList(); 
-            renderSummaryTable(); 
-            loadGradeSummary(); 
-            renderLecturerNotice(o.moderationNotice);
-        } else {
-            showToast(o.message || 'Gagal memuat turun data pelajar.', 'warn');
-            renderLecStudentList();
-        }
-    } catch(e) { 
-        showToast('Ralat sambungan ke API Apps Script.', 'warn'); 
-        renderLecStudentList();
-    }
+        const r = await fetch(`${API}?action=getLecturerStudents&email=${encodeURIComponent(email)}`); const o = await r.json();
+        sData=o.data||[]; if(typeof o.isAdmin === 'boolean') isAdminUser = o.isAdmin;
+        
+        document.getElementById('adminBadge').style.display = isAdminUser ? 'inline-block' : 'none';
+        if (modTabBtn) modTabBtn.style.display = isAdminUser ? 'inline-block' : 'none';
+        if (simTabBtn) simTabBtn.style.display = isAdminUser ? 'inline-block' : 'none';
+        
+        renderLecStudentList(); renderSummaryTable(); loadGradeSummary(); renderLecturerNotice(o.moderationNotice);
+    } catch(e) { showToast('Gagal memuat turun data pelajar.', 'warn'); }
 }
 
 function renderLecturerNotice(notice) {
@@ -1429,14 +1401,14 @@ function renderLecturerNotice(notice) {
                         <span><i class="fas fa-folder-open text-blue-700 me-1"></i> Skrip Sampel Moderasi Terpilih</span>
                         <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px]">${samples.length} Skrip</span>
                     </div>
-                    ${samples.length ? `<ul class="space-y-1.5 text-slate-700">${samples.map(s => `<li class="p-2 bg-slate-50 rounded border border-slate-200 flex justify-between items-center"><div><strong class="text-slate-800 block">${s.nama}</strong><span class="font-mono-score text-[10px] text-slate-500">${s.kp} (${s.kelas})</span></div><span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-1 rounded">${s.kelompok}</span></li>`).join('')}</ul>` : '<div class="text-slate-400 italic">Tiada skrip daripada kumpulan anda terpilih.</div>'}
+                    ${samples.length ? `<ul class="space-y-1.5 text-slate-700">${samples.map(s => `<li class="p-2 bg-slate-50 rounded border border-slate-200 flex justify-between items-center"><div><strong class="text-slate-800 block">${s.nama}</strong><span class="font-mono-score text-[10px] text-slate-500">${s.kp} (${s.kelas})</span></div><span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-1 rounded">${s.kelompok}</span></li>`).join('')}</ul><p class="text-[10px] text-slate-500 mt-2 italic">*Sila sediakan fail/skrip fizikal calon ini untuk diserahkan kepada Ketua Pemeriksa.</p>` : '<div class="text-slate-400 italic">Tiada skrip daripada kumpulan anda terpilih dalam sampel moderasi terkunci.</div>'}
                 </div>
                 <div class="bg-white p-4 rounded-lg border border-red-200 shadow-xs">
                     <div class="font-extrabold text-red-900 mb-2 flex items-center justify-between">
                         <span><i class="fas fa-exclamation-triangle text-red-600 me-1"></i> Kes Ekstrem Wajib Semakan Pen Hijau</span>
                         <span class="bg-red-100 text-red-800 px-2 py-0.5 rounded text-[10px]">${extremes.length} Kes</span>
                     </div>
-                    ${extremes.length ? `<ul class="space-y-1.5 text-slate-700">${extremes.map(e => `<li class="p-2 bg-red-50/50 rounded border border-red-200 flex justify-between items-center"><div><strong class="text-slate-800 block">${e.nama}</strong><span class="font-mono-score text-[10px] text-slate-500">${e.kp} (${e.kelas})</span></div><span class="bg-red-100 text-red-800 font-mono-score font-bold text-[10px] px-2 py-1 rounded">${e.markah} [${e.kat}]</span></li>`).join('')}</ul>` : '<div class="text-slate-400 italic">Tiada kes ekstrem dikesan bagi pelajar anda.</div>'}
+                    ${extremes.length ? `<ul class="space-y-1.5 text-slate-700">${extremes.map(e => `<li class="p-2 bg-red-50/50 rounded border border-red-200 flex justify-between items-center"><div><strong class="text-slate-800 block">${e.nama}</strong><span class="font-mono-score text-[10px] text-slate-500">${e.kp} (${e.kelas})</span></div><span class="bg-red-100 text-red-800 font-mono-score font-bold text-[10px] px-2 py-1 rounded">${e.markah} [${e.kat}]</span></li>`).join('')}</ul><p class="text-[10px] text-slate-500 mt-2 italic">*Skrip ini wajib disemak dan ditanda semula secara berasingan oleh Ketua Pemeriksa.</p>` : '<div class="text-slate-400 italic">Tiada kes ekstrem dikesan bagi pelajar di bawah jagaan anda.</div>'}
                 </div>
             </div>
         </div>
@@ -1463,19 +1435,17 @@ function onClassFilterChange() {
 }
 
 function filterStudents(query) {
-    const q = (query || "").toLowerCase();
+    const q = query.toLowerCase();
     const classSel = document.getElementById('classFilter');
     const selectedClass = classSel ? classSel.value : "";
     const filtered = sData.filter(s => {
-        const nameStr = (s.Nama_Pelajar || "").toString().toLowerCase();
-        const kpStr = (s.No_KP || "").toString();
-        const matchQ = nameStr.includes(q) || kpStr.includes(q);
+        const matchQ = s.Nama_Pelajar.toLowerCase().includes(q) || (s.No_KP && s.No_KP.includes(q));
         const matchClass = !selectedClass || (s.Kelas && s.Kelas.toString() === selectedClass);
         return matchQ && matchClass;
     });
     document.getElementById('sList').innerHTML = filtered.map(s => {
         const hM = s.markahSediaAda, hP = s.peerSummary && s.peerSummary.count>0;
-        return `<div class="s-card ${hM?'done':''}" data-kp="${s.No_KP}" onclick="selectStudent('${s.No_KP}')"><div style="display:flex; align-items:center; gap:12px;"><div class="eval-dot ${hM?'done':'pending'}"></div><div style="flex:1; min-width:0;"><div style="font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s.Nama_Pelajar || 'Tiada Nama'}</div><div class="font-mono-score" style="font-size:10px; color:var(--text-muted); margin-top:2px;">${s.Kelas || '-'} · ${s.No_KP || '-'}</div></div>${hP?`<span class="bg-blue-50 text-blue-700 border border-blue-200" style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:700;"><i class="fas fa-users mr-1"></i>${s.peerSummary.count}</span>`:''}</div></div>`;
+        return `<div class="s-card ${hM?'done':''}" data-kp="${s.No_KP}" onclick="selectStudent('${s.No_KP}')"><div style="display:flex; align-items:center; gap:12px;"><div class="eval-dot ${hM?'done':'pending'}"></div><div style="flex:1; min-width:0;"><div style="font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s.Nama_Pelajar}</div><div class="font-mono-score" style="font-size:10px; color:var(--text-muted); margin-top:2px;">${s.Kelas} · ${s.No_KP}</div></div>${hP?`<span class="bg-blue-50 text-blue-700 border border-blue-200" style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:700;"><i class="fas fa-users mr-1"></i>${s.peerSummary.count}</span>`:''}</div></div>`;
     }).join('') || `<div class="text-center p-4 text-xs text-slate-400">Tiada padanan carian.</div>`;
     if(curS) { const sel = document.querySelector(`#sList .s-card[data-kp="${curS.No_KP}"]`); if(sel) sel.classList.add('selected'); }
 }
@@ -1679,9 +1649,9 @@ async function saveRubrik() {
             await new Promise(r=>setTimeout(r,1500));
             try { const vR = await fetch(`${API}?action=getRubrikStatus&noKP=${encodeURIComponent(curS.No_KP)}`); const vO = await vR.json(); if(vO.ada) { vD=vO.data; break; } } catch(e){}
         }
-        if(vD) { showToast('Borang rubrik dimuat naik ke pangkalan data.', 'success'); renderLecRubrikInputs(vD); document.getElementById('rubrikLecExistBadge').style.display='inline-flex'; await _refreshLecData(); }
+        if(vD) { showToast('Borang rubrik dimuatnaik ke pangkalan data.', 'success'); renderLecRubrikInputs(vD); document.getElementById('rubrikLecExistBadge').style.display='inline-flex'; await _refreshLecData(); }
         else { showToast('Transmisi berjaya. Muat semula untuk pengesahan.', 'warn'); await _refreshLecData(); }
-    } catch(e) { showToast('Ralat transmisi data.', 'warn'); }
+    } catch(e) { showToast('Ralat transmisi data.', 'err'); }
     btn.disabled=false; btn.innerHTML='<i class="fas fa-save me-2 text-lg"></i> SIMPAN SEMUA KEPUTUSAN RUBRIK';
 }
 
@@ -1725,19 +1695,17 @@ async function _refreshLecData() {
 
 async function loadPeerData(kp) {
     try {
-        const r=await fetch(`${API}?action=getPeerSummary&targetKP=${encodeURIComponent(kp.toString())}`); 
-        const o=await r.json();
+        const r=await fetch(`${API}?action=getPeerSummary&targetKP=${encodeURIComponent(kp.toString())}`); const o=await r.json();
         if(o.status==='success' && o.count>0) {
             document.getElementById('peerScoreBadge').style.display='flex'; 
             document.getElementById('peerAvgDisp').textContent=o.avg.toFixed(2)+'/5'; 
             
-            document.getElementById('radarEmpty').style.display='none'; 
-            document.getElementById('radarContent').style.display='block';
+            document.getElementById('radarEmpty').style.display='none'; document.getElementById('radarContent').style.display='block';
             document.getElementById('radarStudentName').textContent=curS.Nama_Pelajar; 
             document.getElementById('radarMeta').textContent=`ID: ${curS.No_KP} | Kelas: ${curS.Kelas} | Saiz Sampel: ${o.count} Penilai`;
             document.getElementById('radarTotalScore').textContent=o.avg.toFixed(2);
             
-            document.getElementById('dimBreakdown').innerHTML = (o.avgDims || [0,0,0,0,0]).map((v,i)=>`
+            document.getElementById('dimBreakdown').innerHTML = o.avgDims.map((v,i)=>`
                 <div class="bg-white p-3 rounded border shadow-sm">
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-xs font-bold text-slate-600 uppercase flex items-center gap-2">
@@ -1759,17 +1727,15 @@ async function loadPeerData(kp) {
             else intp=`Profil kepimpinan masih di fasa pembentukan. Bimbingan khusus disarankan terutamanya bagi komponen <strong class="text-red-600">${minDim}</strong>.`;
             document.getElementById('radarInterpret').innerHTML=intp;
             
-            const listData = o.responses || o.evals || [];
-            document.getElementById('evalBreakdown').innerHTML = listData.map((ev,idx)=>{
-                const q1 = ev.q1 || 0, q2 = ev.q2 || 0, q3 = ev.q3 || 0, q4 = ev.q4 || 0, q5 = ev.q5 || 0;
-                const avg = ev.avg !== undefined ? Number(ev.avg).toFixed(1) : ((q1+q2+q3+q4+q5)/5).toFixed(1);
+            document.getElementById('evalBreakdown').innerHTML = o.evals.map((ev,idx)=>{
+                const avg=((ev.q1+ev.q2+ev.q3+ev.q4+ev.q5)/5).toFixed(1);
                 const bg = avg>=4 ? 'bg-green-50 border-green-200' : avg>=3 ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200';
                 const tc = avg>=4 ? 'text-green-700' : avg>=3 ? 'text-amber-700' : 'text-red-700';
                 return `<div class="p-4 border rounded-lg ${bg} text-center shadow-sm">
                     <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2">Penilai ${idx+1}</div>
                     <div class="font-mono-score text-2xl font-black ${tc} leading-none mb-3">${avg}</div>
                     <div class="flex justify-center gap-1 mb-3">
-                        ${[q1,q2,q3,q4,q5].map((v,i)=>`<div class="w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center text-white" style="background:${DIM_COLORS[i]}; opacity:${0.4 + (v/5)*0.6};" title="${DIMS[i]}: ${v}">${v}</div>`).join('')}
+                        ${[ev.q1,ev.q2,ev.q3,ev.q4,ev.q5].map((v,i)=>`<div class="w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center text-white" style="background:${DIM_COLORS[i]}; opacity:${0.4 + (v/5)*0.6};" title="${DIMS[i]}: ${v}">${v}</div>`).join('')}
                     </div>
                     ${ev.note ? `<div class="text-[10px] text-slate-600 italic bg-white p-2 rounded border line-clamp-3 hover:line-clamp-none text-left leading-relaxed">"${ev.note}"</div>` : ''}
                 </div>`;
@@ -1786,8 +1752,7 @@ async function loadPeerData(kp) {
             });
         } else {
             document.getElementById('peerScoreBadge').style.display='none'; 
-            document.getElementById('radarEmpty').style.display='flex'; 
-            document.getElementById('radarContent').style.display='none';
+            document.getElementById('radarEmpty').style.display='flex'; document.getElementById('radarContent').style.display='none';
             window._cachedRadarDims = null;
         }
     } catch(e) {}
@@ -2311,8 +2276,8 @@ function renderSingleDossierHTML(d) {
                     ${imgUrl ? `<img src="${imgUrl}" referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'font-size:8px; font-weight:800; color:#64748b; text-align:center; text-transform:uppercase;\\'>TIADA GAMBAR</div>';" style="width:100%; height:100%; object-fit:cover;">` : '<div style="font-size:8px; font-weight:800; color:#64748b; text-align:center; text-transform:uppercase;">TIADA GAMBAR</div>'}
                 </div>
                 <div>
-                    <div style="font-size:13px; font-weight:800; color:#1e3a8a;">${p.nama || p.Nama_Pelajar || '--'}</div>
-                    <div style="font-size:10px; font-family:'Space Mono', monospace; color:#475569; margin-top:2px;">NO. KP: ${p.noKP || p.No_KP || '--'} &nbsp;|&nbsp; KELAS: ${p.kelas || p.Kelas || '--'}</div>
+                    <div style="font-size:13px; font-weight:800; color:#1e3a8a;">${p.nama || '--'}</div>
+                    <div style="font-size:10px; font-family:'Space Mono', monospace; color:#475569; margin-top:2px;">NO. KP: ${p.noKP || '--'} &nbsp;|&nbsp; KELAS: ${p.kelas || '--'}</div>
                     <div style="font-size:9.5px; color:#64748b; margin-top:2px;">PENSYARAH PENILAI: <strong>${m.penilai || p.penilai || '--'}</strong></div>
                 </div>
             </div>
@@ -2367,7 +2332,7 @@ function renderSingleDossierHTML(d) {
         </table>
 
         <div class="print-section-title">RINGKASAN PENILAIAN RAKAN SEBAYA 360° (HP8)</div>
-        ${peer && peer.count > 0 ? `
+        ${peer ? `
         <div style="display:flex; justify-content:space-between; align-items:center; border:1px solid #e2e8f0; padding:6px 10px; font-size:9.5px; margin-bottom:10px; border-radius:4px; background:#fafafa;">
             <div>Purata Keseluruhan Rakan: <strong style="font-size:12px; color:#1e3a8a;">${peer.avg.toFixed(2)} / 5.00</strong> (${peer.count} Penilai)</div>
             <div style="display:flex; gap:10px; font-size:8.5px; font-weight:700;">
@@ -2377,22 +2342,22 @@ function renderSingleDossierHTML(d) {
                 <span>Q4 Penganjuran: ${peer.avgDims[3]}</span>
                 <span>Q5 Kerjasama: ${peer.avgDims[4]}</span>
             </div>
-        </div>` : '<div style="font-size:9px; color:#94a3b8; font-style:italic; margin-bottom:10px;">*Tiada rekod penilaian rakan sebaya diterima buat masa ini.</div>'}
+        </div>` : '<div style="font-size:9px; color:#94a3b8; italic; margin-bottom:10px;">*Tiada rekod penilaian rakan sebaya diterima buat masa ini.</div>'}
 
-        <div class="print-signoff" style="margin-top:30px; display:flex; justify-content:space-between;">
+        <div class="print-signoff" style="margin-top:30px;">
             <div>
                 <div style="font-size:9px; font-weight:700;">Disediakan Oleh (Pensyarah Penilai):</div>
-                <div style="margin-top:35px; border-bottom:1px solid #0f172a; width:180px;"></div>
+                <div class="line" style="margin-top:35px;">Tandatangan &amp; Cop Rasmi</div>
                 <div style="font-size:8.5px; color:#64748b; margin-top:2px;">Tarikh: ________________________</div>
             </div>
             <div>
                 <div style="font-size:9px; font-weight:700;">Disahkan Oleh (Ketua Unit Kokurikulum):</div>
-                <div style="margin-top:35px; border-bottom:1px solid #0f172a; width:180px;"></div>
+                <div class="line" style="margin-top:35px;">Tandatangan &amp; Cop Rasmi</div>
                 <div style="font-size:8.5px; color:#64748b; margin-top:2px;">Tarikh: ________________________</div>
             </div>
         </div>
 
-        <div style="margin-top:14px; text-align:center; font-size:8px; color:#94a3b8;">
+        <div class="print-footer-note" style="margin-top:14px;">
             Dokumen ini dijana secara automatik oleh Portal Pemarkahan MPU3221, IPGKDA pada ${new Date().toLocaleDateString('ms-MY')}.
         </div>
     </div>`;
@@ -2454,7 +2419,19 @@ async function printModerationReport() {
 
     const sampleTable = document.getElementById('moderationSampleTable');
     if (sampleTable) {
-        document.getElementById('modPSampleBody').innerHTML = sampleTable.querySelector('tbody').innerHTML;
+        const tempContainer = document.createElement('div');
+        tempContainer.innerHTML = sampleTable.querySelector('tbody').innerHTML;
+
+        // Bersihkan dropdown <select> dan butang daripada paparan cetakan
+        tempContainer.querySelectorAll('select').forEach(sel => {
+            const selectedText = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : sel.value;
+            const span = document.createElement('span');
+            span.textContent = selectedText;
+            sel.parentNode.replaceChild(span, sel);
+        });
+        tempContainer.querySelectorAll('button').forEach(btn => btn.remove());
+
+        document.getElementById('modPSampleBody').innerHTML = tempContainer.innerHTML;
     }
 
     document.querySelectorAll('.active-print').forEach(el => el.classList.remove('active-print'));
@@ -2768,10 +2745,9 @@ window.onload = () => {
     <div style="display:flex; justify-content:center; gap:8px; margin-bottom:8px;"><i class="fas fa-university text-slate-300 text-lg"></i></div>
     <div class="font-bold text-slate-600 uppercase tracking-wider mb-2">Aplikasi Maklumat Penilaian Akademik Tertutup</div>
     <div>Sistem ini dikhususkan untuk rekod rasmi pensyarah dan pelajar <strong class="text-slate-700">Unit Kokurikulum, Institut Pendidikan Guru Kampus Darulaman</strong>.</div>
-    <div class="mt-2 text-[10px]">Penyelaras Kursus MPU3221 &copy; Hak Cipta Terpelihara.</div>
+    <div class="mt-2 text-[10px]">Penyelaras Kursus MPU3221 &copy; 2026 Hak Cipta Terpelihara.</div>
 </div>
 
-<!-- CONTAINER CETAKAN RINGKASAN KELAS -->
 <div id="printArea">
     <div class="print-header">
         <h1>INSTITUT PENDIDIKAN GURU KAMPUS DARULAMAN</h1>
@@ -2800,20 +2776,19 @@ window.onload = () => {
         <thead><tr><th>Skala</th><th class="center">Gred</th><th class="center">Jumlah</th><th class="center">%</th></tr></thead>
         <tbody id="pGradeBody"></tbody>
     </table>
-    <div style="font-size:9.5px; margin-top:8px; display:flex; gap:16px;">
-        <span>Jumlah Pelajar Dinilai: <strong id="pJumlah">0</strong></span>
-        <span>MIN: <strong id="pMin">--</strong></span>
-        <span>Sisihan Piawai: <strong id="pSD">--</strong></span>
+    <div class="print-stat-row">
+        <span>Jumlah Pelajar Dinilai: <span id="pJumlah">0</span></span>
+        <span>MIN: <span id="pMin">--</span></span>
+        <span>Sisihan Piawai: <span id="pSD">--</span></span>
     </div>
 
-    <div style="margin-top:40px; display:flex; justify-content:space-between; font-size:9px;">
-        <div><div style="border-bottom:1px solid #0f172a; width:180px; margin-bottom:4px;"></div>Disediakan Oleh (Pensyarah)</div>
-        <div><div style="border-bottom:1px solid #0f172a; width:180px; margin-bottom:4px;"></div>Disahkan Oleh (Ketua Unit Kokurikulum)</div>
+    <div class="print-signoff">
+        <div><div class="line">Disediakan Oleh (Pensyarah)</div></div>
+        <div><div class="line">Disahkan Oleh (Ketua Unit Kokurikulum)</div></div>
     </div>
-    <div style="font-size:8px; color:#94a3b8; margin-top:14px; text-align:center;">Dokumen ini dijana secara automatik oleh Sistem Portal Pemarkahan MPU3221, Unit Kokurikulum IPGKDA. Sulit &amp; Terhad.</div>
+    <div class="print-footer-note">Dokumen ini dijana secara automatik oleh Sistem Portal Pemarkahan MPU3221, Unit Kokurikulum IPGKDA. Sulit &amp; Terhad.</div>
 </div>
 
-<!-- CONTAINER CETAKAN MODERASI (LAM-PT-04-02) -->
 <div id="printModerationArea">
     <div class="print-header">
         <h1>BORANG MODERASI PEMARKAHAN (LAM-PT-04-02)</h1>
@@ -2842,22 +2817,19 @@ window.onload = () => {
         <tbody id="modPSampleBody"></tbody>
     </table>
 
-    <div style="margin-top:40px; display:flex; justify-content:space-between; font-size:9px;">
+    <div class="print-signoff" style="margin-top:40px;">
         <div>
-            <div style="border-bottom:1px solid #0f172a; width:180px; margin-bottom:4px;"></div>
-            Disediakan Oleh (Ketua Pemeriksa)
+            <div class="line">Disediakan Oleh (Ketua Pemeriksa)</div>
             <div style="font-size:9px; color:#64748b; margin-top:2px;">Tarikh: ____________________</div>
         </div>
         <div>
-            <div style="border-bottom:1px solid #0f172a; width:180px; margin-bottom:4px;"></div>
-            Disahkan Oleh (Ketua Jabatan / Unit)
+            <div class="line">Disahkan Oleh (Ketua Jabatan / Unit)</div>
             <div style="font-size:9px; color:#64748b; margin-top:2px;">Tarikh: ____________________</div>
         </div>
     </div>
-    <div style="font-size:8px; color:#94a3b8; margin-top:14px; text-align:center;">Borang ini dijana secara rasmi di bawah Tatacara Pengurusan Pentaksiran IPGKDA (LAM-PT-04-02). Sulit &amp; Terhad.</div>
+    <div class="print-footer-note">Borang ini dijana secara rasmi di bawah Tatacara Pengurusan Pentaksiran IPGKDA (LAM-PT-04-02). Sulit &amp; Terhad.</div>
 </div>
 
-<!-- CONTAINER CETAKAN DOSSIER INDIVIDU -->
 <div id="printIndividualArea"></div>
 
 </body>
