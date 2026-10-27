@@ -1361,4 +1361,1476 @@ async function initLecturer(email, name, isAdminFlag) {
         sData=o.data||[]; if(typeof o.isAdmin === 'boolean') isAdminUser = o.isAdmin;
         
         document.getElementById('adminBadge').style.display = isAdminUser ? 'inline-block' : 'none';
-        if (modTabBtn) modTabBtn.style.display = isAdminUser ? 'inline-block
+        if (modTabBtn) modTabBtn.style.display = isAdminUser ? 'inline-block' : 'none';
+        if (simTabBtn) simTabBtn.style.display = isAdminUser ? 'inline-block' : 'none';
+        
+        renderLecStudentList(); renderSummaryTable(); loadGradeSummary(); renderLecturerNotice(o.moderationNotice);
+    } catch(e) { showToast('Gagal memuat turun data pelajar.', 'warn'); }
+}
+
+function renderLecturerNotice(notice) {
+    const card = document.getElementById('lecModerationNoticeCard');
+    if (!card || !notice) return;
+    
+    if (isAdminUser) {
+        card.style.display = 'none';
+        return;
+    }
+    
+    const samples = notice.modSamples || [];
+    const extremes = notice.extremeCases || [];
+
+    if (!samples.length && !extremes.length) {
+        card.style.display = 'none';
+        return;
+    }
+
+    card.style.display = 'block';
+    card.innerHTML = `
+        <div class="academic-card p-5 bg-amber-50/60 border-amber-300 shadow-sm">
+            <div class="flex items-center justify-between border-b border-amber-200 pb-3 mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="bg-amber-600 text-white p-1.5 rounded-lg text-xs"><i class="fas fa-bell"></i></span>
+                    <h4 class="font-bold text-amber-900 text-sm uppercase tracking-wide">Notis Moderasi & Semakan Khas (Kumpulan Anda)</h4>
+                </div>
+                <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 bg-amber-200 text-amber-900 rounded-full">Tindakan Pensyarah</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-xs">
+                    <div class="font-extrabold text-blue-900 mb-2 flex items-center justify-between">
+                        <span><i class="fas fa-folder-open text-blue-700 me-1"></i> Skrip Sampel Moderasi Terpilih</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px]">${samples.length} Skrip</span>
+                    </div>
+                    ${samples.length ? `<ul class="space-y-1.5 text-slate-700">${samples.map(s => `<li class="p-2 bg-slate-50 rounded border border-slate-200 flex justify-between items-center"><div><strong class="text-slate-800 block">${s.nama}</strong><span class="font-mono-score text-[10px] text-slate-500">${s.kp} (${s.kelas})</span></div><span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-1 rounded">${s.kelompok}</span></li>`).join('')}</ul><p class="text-[10px] text-slate-500 mt-2 italic">*Sila sediakan fail/skrip fizikal calon ini untuk diserahkan kepada Ketua Pemeriksa.</p>` : '<div class="text-slate-400 italic">Tiada skrip daripada kumpulan anda terpilih dalam sampel moderasi terkunci.</div>'}
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-red-200 shadow-xs">
+                    <div class="font-extrabold text-red-900 mb-2 flex items-center justify-between">
+                        <span><i class="fas fa-exclamation-triangle text-red-600 me-1"></i> Kes Ekstrem Wajib Semakan Pen Hijau</span>
+                        <span class="bg-red-100 text-red-800 px-2 py-0.5 rounded text-[10px]">${extremes.length} Kes</span>
+                    </div>
+                    ${extremes.length ? `<ul class="space-y-1.5 text-slate-700">${extremes.map(e => `<li class="p-2 bg-red-50/50 rounded border border-red-200 flex justify-between items-center"><div><strong class="text-slate-800 block">${e.nama}</strong><span class="font-mono-score text-[10px] text-slate-500">${e.kp} (${e.kelas})</span></div><span class="bg-red-100 text-red-800 font-mono-score font-bold text-[10px] px-2 py-1 rounded">${e.markah} [${e.kat}]</span></li>`).join('')}</ul><p class="text-[10px] text-slate-500 mt-2 italic">*Skrip ini wajib disemak dan ditanda semula secara berasingan oleh Ketua Pemeriksa.</p>` : '<div class="text-slate-400 italic">Tiada kes ekstrem dikesan bagi pelajar di bawah jagaan anda.</div>'}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderLecStudentList() {
+    const classes = [...new Set(sData.map(s=>s.Kelas))].filter(Boolean).sort();
+    document.getElementById('classInfo').textContent = isAdminUser ? `SEMUA KELAS (${classes.length})` : (classes.length>0 ? classes.join(', ') : '');
+
+    ['classFilter','laporanClassFilter','printClassFilter','peerStatusClassFilter','moderationClassFilter','simClassFilter'].forEach(id => {
+        const sel = document.getElementById(id); const prev = sel ? sel.value : "";
+        if (sel) {
+            sel.innerHTML = '<option value="">Semua Kelas</option>' + classes.map(k => `<option value="${k}">${k}</option>`).join('');
+            if (classes.includes(prev)) sel.value = prev;
+        }
+    });
+
+    filterStudents(document.getElementById('searchStudent') ? document.getElementById('searchStudent').value : "");
+}
+
+function onClassFilterChange() {
+    filterStudents(document.getElementById('searchStudent').value);
+}
+
+function filterStudents(query) {
+    const q = query.toLowerCase();
+    const classSel = document.getElementById('classFilter');
+    const selectedClass = classSel ? classSel.value : "";
+    const filtered = sData.filter(s => {
+        const matchQ = s.Nama_Pelajar.toLowerCase().includes(q) || (s.No_KP && s.No_KP.includes(q));
+        const matchClass = !selectedClass || (s.Kelas && s.Kelas.toString() === selectedClass);
+        return matchQ && matchClass;
+    });
+    document.getElementById('sList').innerHTML = filtered.map(s => {
+        const hM = s.markahSediaAda, hP = s.peerSummary && s.peerSummary.count>0;
+        return `<div class="s-card ${hM?'done':''}" data-kp="${s.No_KP}" onclick="selectStudent('${s.No_KP}')"><div style="display:flex; align-items:center; gap:12px;"><div class="eval-dot ${hM?'done':'pending'}"></div><div style="flex:1; min-width:0;"><div style="font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s.Nama_Pelajar}</div><div class="font-mono-score" style="font-size:10px; color:var(--text-muted); margin-top:2px;">${s.Kelas} · ${s.No_KP}</div></div>${hP?`<span class="bg-blue-50 text-blue-700 border border-blue-200" style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:700;"><i class="fas fa-users mr-1"></i>${s.peerSummary.count}</span>`:''}</div></div>`;
+    }).join('') || `<div class="text-center p-4 text-xs text-slate-400">Tiada padanan carian.</div>`;
+    if(curS) { const sel = document.querySelector(`#sList .s-card[data-kp="${curS.No_KP}"]`); if(sel) sel.classList.add('selected'); }
+}
+
+function showLecTab(t) {
+    if (t === 'moderasi' && !isAdminUser) {
+        showToast('Akses Terhad: Modul Moderasi khusus untuk Super Admin sahaja.', 'warn');
+        t = 'marking';
+    }
+    if (t === 'simulasi' && !isAdminUser) {
+        showToast('Akses Terhad: Simulasi SP khusus untuk Super Admin sahaja.', 'warn');
+        t = 'marking';
+    }
+
+    ['marking','peer','rubrik','summary','laporan','peerstatus','moderasi','simulasi'].forEach(id => { 
+        const el = document.getElementById('ltab-' + id); 
+        if (el) el.style.display = 'none'; 
+    });
+    const tgt = document.getElementById('ltab-' + t); 
+    if (tgt) tgt.style.display = 'block';
+    
+    document.querySelectorAll('#lecturerDash .tab-bar .tab').forEach(btn => {
+        const isTarget = btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${t}'`);
+        btn.classList.toggle('active', !!isTarget);
+    });
+    
+    if (t === 'marking' && curS) { 
+        document.getElementById('gradingPanel').style.display = 'block'; 
+        document.getElementById('gradingEmpty').style.display = 'none'; 
+    }
+    if (t === 'rubrik') { 
+        if (curS) showRubrikLecPanel(curS); 
+        else { 
+            document.getElementById('rubrikLecPanel').style.display = 'none'; 
+            document.getElementById('rubrikLecEmpty').style.display = 'flex'; 
+        } 
+    }
+    if (t === 'summary') renderSummaryTable();
+    if (t === 'laporan') loadGradeSummary();
+    if (t === 'peerstatus') loadPeerCompletionStatus();
+    if (t === 'moderasi' && isAdminUser) loadModerationSampling();
+}
+
+async function selectStudent(kp) {
+    if (!kp) return;
+    const targetKP = normalizeKP(kp);
+    curS = sData.find(s => normalizeKP(s.No_KP) === targetKP) || sData.find(s => s.No_KP == kp);
+    if (!curS) {
+        showToast('Rekod pelajar tidak dijumpai.', 'warn');
+        return;
+    }
+
+    document.querySelectorAll('#sList .s-card').forEach(c => c.classList.remove('selected'));
+    const activeCard = document.querySelector(`#sList .s-card[data-kp="${curS.No_KP}"]`);
+    if (activeCard) activeCard.classList.add('selected');
+    
+    document.getElementById('ln').textContent = curS.Nama_Pelajar;
+    document.getElementById('lk').textContent = `ID: ${curS.No_KP}`;
+    loadImage(document.getElementById('li'), document.getElementById('liPh'), curS.Link_Gambar);
+    
+    document.getElementById('gradingPanel').style.display = 'block';
+    document.getElementById('gradingEmpty').style.display = 'none';
+    
+    if (curS.markahSediaAda) {
+        document.getElementById('h1').value = fmt1(curS.markahSediaAda.hp1 || 0);
+        document.getElementById('h5').value = fmt1(curS.markahSediaAda.hp5 || 0);
+        document.getElementById('h8').value = fmt1(curS.markahSediaAda.hp8 || 0);
+        document.getElementById('h10').value = fmt1(curS.markahSediaAda.hp10 || 0);
+        document.getElementById('justTxt').value = curS.markahSediaAda.just === "-" ? "" : curS.markahSediaAda.just;
+    } else { 
+        ['h1','h5','h8','h10','justTxt'].forEach(id => document.getElementById(id).value = ''); 
+    }
+    calc();
+
+    const badgeRubrik = document.getElementById('badge-rubrik');
+    if (curS.markahSediaAda) { 
+        badgeRubrik.innerHTML = `<i class="fas fa-check-circle me-1"></i> Disahkan`; 
+        badgeRubrik.style.background = "#f0fdf4"; badgeRubrik.style.color = "#15803d"; badgeRubrik.style.borderColor = "#bbf7d0"; 
+    } else { 
+        badgeRubrik.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i> Data Tiada`; 
+        badgeRubrik.style.background = "#fef2f2"; badgeRubrik.style.color = "#b91c1c"; badgeRubrik.style.borderColor = "#fecaca"; 
+    }
+
+    const act = ['marking','rubrik','peer','summary'].find(id => document.getElementById('ltab-'+id)?.style.display !== 'none');
+    if (act === 'rubrik') showRubrikLecPanel(curS);
+    
+    loadPeerData(curS.No_KP);
+}
+
+async function saveManualScores() {
+    if(!curS) return;
+    const h1 = roundTo1(document.getElementById('h1').value);
+    const h5 = roundTo1(document.getElementById('h5').value);
+    const h8 = roundTo1(document.getElementById('h8').value);
+    const h10 = roundTo1(document.getElementById('h10').value);
+    const just = document.getElementById('justTxt').value.trim();
+
+    if (h1>30||h5>10||h8>30||h10>30||h1<0||h5<0||h8<0||h10<0) {
+        return showToast('Markah melebihi had maksimum/minimum bagi komponen berkenaan.', 'warn');
+    }
+
+    const total = roundTo1(h1 + h5 + h8 + h10);
+    if (total >= 90 && just === "") {
+        const jt = document.getElementById('justTxt');
+        jt.style.borderColor = '#ef4444';
+        jt.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.2)';
+        jt.focus();
+        return showToast('AMARAN: Justifikasi rasmi WAJIB diisi untuk perakuan gred cemerlang tinggi (A+)!', 'warn');
+    }
+
+    const btn = document.getElementById('saveManualBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Menyimpan...';
+    try {
+        await fetch(API, { method:'POST', mode:'no-cors', body: JSON.stringify({
+            action: "submitScores",
+            noKP: curS.No_KP.toString(),
+            hp1: h1, hp5: h5, hp8: h8, hp10: h10,
+            justifikasi: just || "-",
+            penilai: curLecEmail
+        })});
+        await new Promise(r => setTimeout(r, 1500));
+        showToast('Markah manual berjaya disimpan.', 'success');
+        await _refreshLecData();
+    } catch(e) {
+        showToast('Ralat menyimpan markah manual.', 'warn');
+    }
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i> Simpan Markah Manual (Override)';
+}
+
+function renderLecRubrikInputs(dataObj) {
+    const cont = document.getElementById('lecRubrikContainer');
+    cont.innerHTML = RUBRIK_CONFIG.map(cat => {
+        const inputs = cat.items.map((item, idx) => {
+            const k = cat.prefix + (idx+1); const v = dataObj && dataObj[k] !== undefined ? roundTo1(dataObj[k]) : 0;
+            const isFull = v === item.max;
+            return `<div class="flex items-center gap-4 p-4 border rounded-lg bg-white mb-2 shadow-sm transition hover:border-slate-400" style="border-left:4px solid ${isFull ? cat.color : '#e2e8f0'};">
+                <div class="flex-1">
+                    <div class="text-[13px] font-bold text-slate-800 mb-1">${item.nama}</div>
+                    <div class="text-[11px] text-slate-500 leading-relaxed">${item.penerangan}</div>
+                </div>
+                <div class="flex flex-col items-end shrink-0">
+                    <span class="text-[10px] font-bold text-slate-400 mb-1 uppercase">Markah (/ ${item.max})</span>
+                    <input type="number" id="rub_${k}" min="0" max="${item.max}" step="0.1" value="${fmt1(v)}" 
+                        oninput="clampRubrik('${k}', ${item.max}); calcLecRubrikTotal();" 
+                        class="w-20 text-center font-mono-score text-lg font-bold bg-slate-50 border-slate-300 rounded focus:ring-2" style="color:${cat.color};">
+                </div>
+            </div>`;
+        }).join('');
+        return `<div class="academic-card mb-8 overflow-hidden shadow-md">
+            <div class="p-4 border-b flex justify-between items-center" style="background:${cat.bg};">
+                <div class="text-sm font-bold uppercase tracking-wider flex items-center gap-2" style="color:${cat.color};"><i class="fas ${cat.icon}"></i> ${cat.title}</div>
+            </div>
+            <div class="p-5 bg-slate-50 border-b">${inputs}</div>
+            <div class="p-5 flex justify-between items-center bg-white">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Jumlah Sub-Markah Kategori Ini</span>
+                <div class="flex items-end gap-2 bg-slate-100 px-4 py-2 rounded-lg border">
+                    <span id="tot_${cat.id}" class="font-mono-score text-3xl font-black" style="color:${cat.color}; line-height:1;">0.0</span>
+                    <span class="text-sm font-bold text-slate-400 mb-1">/ ${cat.max}</span>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    calcLecRubrikTotal();
+}
+
+function clampRubrik(k, max) { 
+    const el=document.getElementById('rub_'+k); 
+    let v = roundTo1(el.value); 
+    if(v>max) v = roundTo1(max); 
+    if(v<0) v = 0; 
+    el.value = fmt1(v);
+    const parent = el.closest('.flex.items-center');
+    if(v === max && parent) { parent.style.borderLeftColor = el.style.color; parent.style.background = '#f8fafc'; } 
+    else if (parent) { parent.style.borderLeftColor = '#e2e8f0'; parent.style.background = 'white'; }
+}
+
+function calcLecRubrikTotal() {
+    RUBRIK_CONFIG.forEach(cat => {
+        let sum = 0; cat.items.forEach((item, idx) => { sum += roundTo1(document.getElementById('rub_'+cat.prefix+(idx+1))?.value); });
+        const el = document.getElementById('tot_'+cat.id); if(el) el.textContent = fmt1(sum);
+    });
+}
+
+async function showRubrikLecPanel(s) {
+    document.getElementById('rubrikLecEmpty').style.display='none'; document.getElementById('rubrikLecPanel').style.display='block';
+    document.getElementById('rubrikLecStudentName').textContent=s.Nama_Pelajar; document.getElementById('rubrikLecStudentKP').textContent=`ID Calon: ${s.No_KP}`;
+    try {
+        const r = await fetch(`${API}?action=getRubrikStatus&noKP=${encodeURIComponent(s.No_KP)}`); const o = await r.json();
+        if(o.status==='success' && o.ada) { document.getElementById('rubrikLecExistBadge').style.display='inline-flex'; renderLecRubrikInputs(o.data); }
+        else { document.getElementById('rubrikLecExistBadge').style.display='none'; renderLecRubrikInputs(null); }
+    } catch(e) { renderLecRubrikInputs(null); }
+}
+
+async function saveRubrik() {
+    if(!curS) return; const btn=document.getElementById('saveRubrikBtn'); btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Memproses dan Menyimpan...';
+    const pl = { action:"submitRubrik", noKP:curS.No_KP.toString(), nama:curS.Nama_Pelajar, kelas:curS.Kelas, penilai:curLecEmail, data:{} };
+    RUBRIK_CONFIG.forEach(cat => cat.items.forEach((it,idx) => pl.data[cat.prefix+(idx+1)] = roundTo1(document.getElementById('rub_'+cat.prefix+(idx+1))?.value) ));
+    try {
+        await fetch(API, { method:'POST', mode:'no-cors', body:JSON.stringify(pl) });
+        let vD=null; for(let i=1; i<=5; i++) {
+            await new Promise(r=>setTimeout(r,1500));
+            try { const vR = await fetch(`${API}?action=getRubrikStatus&noKP=${encodeURIComponent(curS.No_KP)}`); const vO = await vR.json(); if(vO.ada) { vD=vO.data; break; } } catch(e){}
+        }
+        if(vD) { showToast('Borang rubrik dimuatnaik ke pangkalan data.', 'success'); renderLecRubrikInputs(vD); document.getElementById('rubrikLecExistBadge').style.display='inline-flex'; await _refreshLecData(); }
+        else { showToast('Transmisi berjaya. Muat semula untuk pengesahan.', 'warn'); await _refreshLecData(); }
+    } catch(e) { showToast('Ralat transmisi data.', 'err'); }
+    btn.disabled=false; btn.innerHTML='<i class="fas fa-save me-2 text-lg"></i> SIMPAN SEMUA KEPUTUSAN RUBRIK';
+}
+
+async function _refreshLecData() {
+    const r = await fetch(`${API}?action=getLecturerStudents&email=${encodeURIComponent(curLecEmail)}`); const o = await r.json();
+    if(o.data) { 
+        sData = o.data; 
+        curS = sData.find(s=>s.No_KP.toString()===curS.No_KP.toString()) || curS; 
+        renderLecStudentList(); 
+        renderSummaryTable();
+
+        if(curS.markahSediaAda) {
+            document.getElementById('h1').value = fmt1(curS.markahSediaAda.hp1 || 0);
+            document.getElementById('h5').value = fmt1(curS.markahSediaAda.hp5 || 0);
+            document.getElementById('h8').value = fmt1(curS.markahSediaAda.hp8 || 0);
+            document.getElementById('h10').value = fmt1(curS.markahSediaAda.hp10 || 0);
+            document.getElementById('justTxt').value = curS.markahSediaAda.just === "-" ? "" : curS.markahSediaAda.just;
+        } else {
+            ['h1','h5','h8','h10','justTxt'].forEach(id => document.getElementById(id).value = '');
+        }
+        calc();
+
+        const badgeRubrik = document.getElementById('badge-rubrik');
+        if(curS.markahSediaAda) { 
+            badgeRubrik.innerHTML = `<i class="fas fa-check-circle me-1"></i> Disahkan`; 
+            badgeRubrik.style.background = "#f0fdf4"; badgeRubrik.style.color = "#15803d"; badgeRubrik.style.borderColor = "#bbf7d0"; 
+        } else { 
+            badgeRubrik.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i> Data Tiada`; 
+            badgeRubrik.style.background = "#fef2f2"; badgeRubrik.style.color = "#b91c1c"; badgeRubrik.style.borderColor = "#fecaca"; 
+        }
+
+        const modTabBtn = document.getElementById('tabBtnModerasi');
+        if (modTabBtn) modTabBtn.style.display = isAdminUser ? 'inline-block' : 'none';
+        const simTabBtn = document.getElementById('tabBtnSimulasi');
+        if (simTabBtn) simTabBtn.style.display = isAdminUser ? 'inline-block' : 'none';
+
+        loadPeerData(curS.No_KP);
+        renderLecturerNotice(o.moderationNotice);
+    }
+}
+
+async function loadPeerData(kp) {
+    try {
+        const r=await fetch(`${API}?action=getPeerSummary&targetKP=${encodeURIComponent(kp.toString())}`); const o=await r.json();
+        if(o.status==='success' && o.count>0) {
+            document.getElementById('peerScoreBadge').style.display='flex'; 
+            document.getElementById('peerAvgDisp').textContent=o.avg.toFixed(2)+'/5'; 
+            
+            document.getElementById('radarEmpty').style.display='none'; document.getElementById('radarContent').style.display='block';
+            document.getElementById('radarStudentName').textContent=curS.Nama_Pelajar; 
+            document.getElementById('radarMeta').textContent=`ID: ${curS.No_KP} | Kelas: ${curS.Kelas} | Saiz Sampel: ${o.count} Penilai`;
+            document.getElementById('radarTotalScore').textContent=o.avg.toFixed(2);
+            
+            document.getElementById('dimBreakdown').innerHTML = o.avgDims.map((v,i)=>`
+                <div class="bg-white p-3 rounded border shadow-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold text-slate-600 uppercase flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full inline-block" style="background:${DIM_COLORS[i]};"></span>
+                            ${DIMS[i]}
+                        </span>
+                        <span class="font-mono-score text-sm font-bold text-slate-800">${v.toFixed(1)}/5</span>
+                    </div>
+                    <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-700" style="width:${(v/5)*100}%; background:${DIM_COLORS[i]};"></div>
+                    </div>
+                </div>`).join('');
+            
+            const oa = o.avg; let intp='';
+            const maxDim = DIMS[o.avgDims.indexOf(Math.max(...o.avgDims))];
+            const minDim = DIMS[o.avgDims.indexOf(Math.min(...o.avgDims))];
+            if(oa>=4.5) intp=`Kredibiliti kepimpinan amat tinggi diperakui oleh rakan sebaya. Atribut kepimpinan mendatar berfokus kepada kluster <strong class="text-blue-700">${maxDim}</strong>.`;
+            else if(oa>=3.5) intp=`Mempamerkan corak kepimpinan memuaskan. Dominan dalam <strong class="text-blue-700">${maxDim}</strong> namun memerlukan sedikit perhatian terhadap atribut <strong class="text-red-600">${minDim}</strong>.`;
+            else intp=`Profil kepimpinan masih di fasa pembentukan. Bimbingan khusus disarankan terutamanya bagi komponen <strong class="text-red-600">${minDim}</strong>.`;
+            document.getElementById('radarInterpret').innerHTML=intp;
+            
+            document.getElementById('evalBreakdown').innerHTML = o.evals.map((ev,idx)=>{
+                const avg=((ev.q1+ev.q2+ev.q3+ev.q4+ev.q5)/5).toFixed(1);
+                const bg = avg>=4 ? 'bg-green-50 border-green-200' : avg>=3 ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200';
+                const tc = avg>=4 ? 'text-green-700' : avg>=3 ? 'text-amber-700' : 'text-red-700';
+                return `<div class="p-4 border rounded-lg ${bg} text-center shadow-sm">
+                    <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2">Penilai ${idx+1}</div>
+                    <div class="font-mono-score text-2xl font-black ${tc} leading-none mb-3">${avg}</div>
+                    <div class="flex justify-center gap-1 mb-3">
+                        ${[ev.q1,ev.q2,ev.q3,ev.q4,ev.q5].map((v,i)=>`<div class="w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center text-white" style="background:${DIM_COLORS[i]}; opacity:${0.4 + (v/5)*0.6};" title="${DIMS[i]}: ${v}">${v}</div>`).join('')}
+                    </div>
+                    ${ev.note ? `<div class="text-[10px] text-slate-600 italic bg-white p-2 rounded border line-clamp-3 hover:line-clamp-none text-left leading-relaxed">"${ev.note}"</div>` : ''}
+                </div>`;
+            }).join('');
+            
+            window._cachedRadarDims = o.avgDims;
+            
+            if(radarChart) { radarChart.destroy(); radarChart = null; }
+            requestAnimationFrame(()=>{ 
+                const c=document.getElementById('radarChart'); 
+                if(c && c.offsetParent !== null) {
+                    radarChart=new Chart(c.getContext('2d'), buildRC(o.avgDims)); 
+                }
+            });
+        } else {
+            document.getElementById('peerScoreBadge').style.display='none'; 
+            document.getElementById('radarEmpty').style.display='flex'; document.getElementById('radarContent').style.display='none';
+            window._cachedRadarDims = null;
+        }
+    } catch(e) {}
+}
+
+function buildRC(dims) {
+    return { 
+        type:'radar', 
+        data:{ 
+            labels:DIMS, 
+            datasets:[{ 
+                data:dims, 
+                backgroundColor:'rgba(59, 130, 246, 0.1)', 
+                borderColor:'#2563eb', 
+                borderWidth: 2, 
+                pointBackgroundColor: DIM_COLORS, 
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }] 
+        }, 
+        options:{ 
+            responsive:true, maintainAspectRatio:false, 
+            plugins:{legend:{display:false}}, 
+            scales:{ 
+                r:{ 
+                    min:0, max:5, 
+                    ticks:{stepSize:1, display:true, backdropColor:'transparent', color:'#94a3b8', font:{size:9, family:'Space Mono'}}, 
+                    grid:{color:'#e2e8f0'}, 
+                    angleLines:{color:'#e2e8f0'},
+                    pointLabels:{color:'#475569', font:{size:11, weight:'bold', family:'Plus Jakarta Sans'}} 
+                } 
+            } 
+        } 
+    };
+}
+
+function calc() {
+    const v=['h1','h5','h8','h10'].map(id=>Math.max(0, roundTo1(document.getElementById(id).value))); 
+    const t=roundTo1(v.reduce((a,b)=>a+b,0));
+    document.getElementById('tm').textContent=fmt1(t); const g=calculateGred(t); document.getElementById('gd').textContent=g;
+    document.getElementById('justArea').style.display=g==='A+'?'block':'none';
+    
+    document.getElementById('tm').style.color = t >= 80 ? '#0284c7' : t >= 50 ? '#d97706' : '#dc2626';
+    document.getElementById('gd').style.color = g.includes('A') ? '#16a34a' : g.includes('B') ? '#2563eb' : g.includes('C') ? '#d97706' : '#dc2626';
+}
+
+function renderSummaryTable() {
+    const tbody = document.getElementById('summaryBody');
+    if (!tbody) return;
+    if (!sData || !sData.length) { tbody.innerHTML = '<tr><td colspan="9" class="text-center p-8 text-slate-400">Tiada rekod pelajar.</td></tr>'; return; }
+    
+    const classFilter = document.getElementById('printClassFilter') ? document.getElementById('printClassFilter').value : "";
+    const filteredData = classFilter ? sData.filter(s => (s.Kelas || "").toString() === classFilter) : sData;
+
+    if (!filteredData.length) { 
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center p-8 text-slate-400">Tiada rekod pelajar bagi kelas ini.</td></tr>'; 
+        return; 
+    }
+
+    tbody.innerHTML = filteredData.map((s, index)=>{
+        const m=s.markahSediaAda||{}, t=roundTo1((m.hp1||0)+(m.hp5||0)+(m.hp8||0)+(m.hp10||0)), g=t>0?calculateGred(t):'--';
+        const isOdd = index % 2 !== 0;
+        const bg = isOdd ? 'bg-slate-50' : 'bg-white';
+        const gBadge = g.includes('A') ? 'bg-green-100 text-green-800' : g.includes('B') ? 'bg-blue-100 text-blue-800' : g.includes('C') ? 'bg-amber-100 text-amber-800' : g==='--' ? 'bg-slate-100 text-slate-500' : 'bg-red-100 text-red-800';
+        
+        return `<tr class="${bg} border-b border-slate-200 hover:bg-blue-50 transition-colors">
+            <td class="p-3">
+                <div class="font-bold text-[13px] text-slate-800">${s.Nama_Pelajar}</div>
+                <div class="font-mono-score text-[10px] text-slate-500 mt-1">${s.No_KP} <span class="mx-1">•</span> ${s.Kelas}</div>
+            </td>
+            <td class="p-3 text-center font-mono-score text-[13px] font-bold" style="color:var(--hp1-color);">${m.hp1 !== undefined ? fmt1(m.hp1) : '-'}</td>
+            <td class="p-3 text-center font-mono-score text-[13px] font-bold" style="color:var(--hp5-color);">${m.hp5 !== undefined ? fmt1(m.hp5) : '-'}</td>
+            <td class="p-3 text-center font-mono-score text-[13px] font-bold" style="color:var(--hp8-color);">${m.hp8 !== undefined ? fmt1(m.hp8) : '-'}</td>
+            <td class="p-3 text-center font-mono-score text-[13px] font-bold" style="color:var(--hp10-color);">${m.hp10 !== undefined ? fmt1(m.hp10) : '-'}</td>
+            <td class="p-3 text-center font-mono-score text-[15px] font-black text-slate-800 bg-slate-100 border-l border-r">${t ? fmt1(t) : '-'}</td>
+            <td class="p-3 text-center">
+                <span class="inline-block px-2 py-1 rounded font-serif-title font-bold text-sm ${gBadge}">${g}</span>
+            </td>
+            <td class="p-3 text-center">
+                ${s.peerSummary ? `<span class="bg-blue-50 text-blue-600 border border-blue-200 px-2 py-1 rounded font-mono-score text-[11px] font-bold">${s.peerSummary.avg.toFixed(1)}/5</span>` : '<span class="text-slate-300 text-xs">-</span>'}
+            </td>
+            <td class="p-3 text-center">
+                <button onclick="printIndividualReport('${s.No_KP}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-bold border transition" title="Cetak Laporan Individu">
+                    <i class="fas fa-file-pdf text-indigo-700 mr-1"></i> Dossier
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function loadGradeSummary() {
+    try {
+        const selEl = document.getElementById('laporanClassFilter');
+        const kelas = selEl ? selEl.value : "";
+        const r = await fetch(`${API}?action=getGradeSummary&email=${encodeURIComponent(curLecEmail)}&kelas=${encodeURIComponent(kelas)}`); const o = await r.json();
+        if (o.status === 'success') renderGradeSummary(o, kelas);
+    } catch(e) { showToast('Gagal memuat laporan rumusan.', 'warn'); }
+}
+
+function renderGradeSummary(o, kelasFilter) {
+    document.getElementById('laporanSubtitle').textContent = (o.isAdmin
+        ? `Analisis Pentaksiran Berterusan — ${kelasFilter ? 'Kelas: ' + kelasFilter : 'SEMUA KELAS'} (berdasarkan markah akhir keseluruhan)`
+        : `Analisis Pentaksiran Berterusan — ${kelasFilter ? 'Kelas: ' + kelasFilter : 'semua kelas anda'} (berdasarkan markah akhir keseluruhan)`);
+
+    document.getElementById('gradeSummaryBody').innerHTML = o.bands.map(b => `
+        <tr onclick="filterBySpecificGrade('${b.gred}')" class="cursor-pointer hover:bg-indigo-50 transition" title="Klik untuk lihat senarai pelajar Gred ${b.gred}">
+            <td class="p-3 text-center font-mono-score">${b.skala}</td>
+            <td class="p-3 text-center font-bold text-indigo-800">${b.gred}</td>
+            <td class="p-3 text-center font-mono-score font-bold">${b.jumlah}</td>
+            <td class="p-3 text-center font-mono-score">${b.peratus.toFixed(2)}</td>
+        </tr>`).join('');
+    document.getElementById('gradeSummaryTotal').textContent = o.jumlah;
+    document.getElementById('gradeMinVal').textContent = o.jumlah > 0 ? o.purata.toFixed(2) : '--';
+    document.getElementById('gradeSDVal').textContent = o.jumlah > 0 ? o.sisihanPiawai.toFixed(2) : '--';
+    document.getElementById('gradeSummaryEmptyNote').style.display = o.jumlah > 0 ? 'none' : 'flex';
+
+    if (gradeBarChart) { gradeBarChart.destroy(); gradeBarChart = null; }
+    const c = document.getElementById('gradeBarChart');
+    if (c) {
+        gradeBarChart = new Chart(c.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: o.bands.map(b => b.gred),
+                datasets: [{
+                    data: o.bands.map(b => b.jumlah),
+                    backgroundColor: o.bands.map(b => GRADE_CHART_COLORS[b.gred] || '#94a3b8'),
+                    borderRadius: 4,
+                    maxBarThickness: 46
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                onClick: (evt, activeEls) => {
+                    if (activeEls.length > 0) {
+                        const clickedIndex = activeEls[0].index;
+                        const clickedGrade = o.bands[clickedIndex].gred;
+                        filterBySpecificGrade(clickedGrade);
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0, color: '#94a3b8' }, grid: { color: '#e2e8f0' } },
+                    x: { ticks: { color: '#475569', font: { weight: 'bold' } }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    filterLaporanStudents();
+}
+
+function filterBySpecificGrade(gred) {
+    const sel = document.getElementById('filterGradeSelect');
+    if (sel) {
+        sel.value = gred;
+        filterLaporanStudents();
+        document.getElementById('laporanStudentSection')?.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function filterLaporanStudents() {
+    const tbody = document.getElementById('laporanStudentBody');
+    if (!tbody) return;
+
+    const classFilter = document.getElementById('laporanClassFilter')?.value || "";
+    const gradeFilter = document.getElementById('filterGradeSelect')?.value || "";
+    const sortVal = document.getElementById('sortGradeSelect')?.value || "gred_desc";
+    const searchQ = document.getElementById('searchLaporanStudent')?.value.toLowerCase().trim() || "";
+
+    let list = sData.filter(s => {
+        const matchClass = !classFilter || (s.Kelas || "").toString() === classFilter;
+        const m = s.markahSediaAda || {};
+        const total = roundTo1((m.hp1 || 0) + (m.hp5 || 0) + (m.hp8 || 0) + (m.hp10 || 0));
+        const gred = total > 0 ? calculateGred(total) : "F";
+        const matchGrade = !gradeFilter || gred === gradeFilter;
+        const matchSearch = !searchQ || s.Nama_Pelajar.toLowerCase().includes(searchQ) || (s.No_KP && s.No_KP.includes(searchQ));
+        return matchClass && matchGrade && matchSearch;
+    });
+
+    const gradeRank = {"A+":13,"A":12,"A-":11,"B+":10,"B":9,"B-":8,"C+":7,"C":6,"C-":5,"D+":4,"D":3,"E":2,"F":1};
+
+    list.sort((a, b) => {
+        const mA = a.markahSediaAda || {}, tA = roundTo1((mA.hp1||0)+(mA.hp5||0)+(mA.hp8||0)+(mA.hp10||0)), gA = tA > 0 ? calculateGred(tA) : "F";
+        const mB = b.markahSediaAda || {}, tB = roundTo1((mB.hp1||0)+(mB.hp5||0)+(mB.hp8||0)+(mB.hp10||0)), gB = tB > 0 ? calculateGred(tB) : "F";
+
+        if (sortVal === "gred_desc") return (gradeRank[gB] || 0) - (gradeRank[gA] || 0) || tB - tA;
+        if (sortVal === "gred_asc") return (gradeRank[gA] || 0) - (gradeRank[gB] || 0) || tA - tB;
+        if (sortVal === "score_desc") return tB - tA;
+        if (sortVal === "score_asc") return tA - tB;
+        if (sortVal === "nama_asc") return a.Nama_Pelajar.localeCompare(b.Nama_Pelajar);
+        if (sortVal === "kelas_asc") return (a.Kelas || "").localeCompare(b.Kelas || "");
+        return 0;
+    });
+
+    if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center p-8 text-slate-400">Tiada pelajar dijumpai mengikut penapis ini.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = list.map((s, idx) => {
+        const m = s.markahSediaAda || {};
+        const total = roundTo1((m.hp1 || 0) + (m.hp5 || 0) + (m.hp8 || 0) + (m.hp10 || 0));
+        const gred = total > 0 ? calculateGred(total) : "F";
+        const gBadge = gred.includes('A') ? 'bg-green-100 text-green-800 border-green-200' : gred.includes('B') ? 'bg-blue-100 text-blue-800 border-blue-200' : gred.includes('C') ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-red-100 text-red-800 border-red-200';
+
+        return `<tr class="hover:bg-slate-50 transition border-b">
+            <td class="text-center font-bold text-slate-400">${idx + 1}</td>
+            <td class="font-bold text-slate-800">${s.Nama_Pelajar}</td>
+            <td class="font-mono-score text-xs text-slate-500">${s.No_KP}</td>
+            <td class="text-xs font-bold text-slate-600">${s.Kelas}</td>
+            <td class="text-center font-mono-score font-bold text-slate-900">${fmt1(total)}</td>
+            <td class="text-center"><span class="px-2.5 py-0.5 rounded font-serif-title font-bold text-xs border ${gBadge}">${gred}</span></td>
+            <td class="text-xs text-slate-600">${m.penilai || s.Penilai || '--'}</td>
+            <td class="text-center">
+                <button onclick="selectStudent('${s.No_KP}'); showLecTab('marking');" class="px-2.5 py-1 text-[11px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 rounded-lg shadow-xs flex items-center gap-1 mx-auto">
+                    <i class="fas fa-search me-1"></i> Semak
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function loadPeerCompletionStatus() {
+    try {
+        const selEl = document.getElementById('peerStatusClassFilter');
+        const kelas = selEl ? selEl.value : "";
+        const r = await fetch(`${API}?action=getPeerCompletionStatus&email=${encodeURIComponent(curLecEmail)}&kelas=${encodeURIComponent(kelas)}`); const o = await r.json();
+        if (o.status === 'success') renderPeerCompletionStatus(o, kelas);
+    } catch(e) { showToast('Gagal memuat status penilaian rakan.', 'warn'); }
+}
+
+function renderPeerCompletionStatus(o, kelasFilter) {
+    document.getElementById('peerStatusSubtitle').textContent = (o.isAdmin
+        ? `Rumusan penilaian rakan sebaya — ${kelasFilter ? 'Kelas: ' + kelasFilter : 'SEMUA KELAS'}`
+        : `Rumusan penilaian rakan sebaya — ${kelasFilter ? 'Kelas: ' + kelasFilter : 'semua kelas anda'}`);
+
+    document.getElementById('psTotal').textContent = o.ringkasan.jumlahPelajar;
+    document.getElementById('psDone').textContent = o.ringkasan.selesai;
+    document.getElementById('psPartial').textContent = o.ringkasan.sebahagian;
+    document.getElementById('psNone').textContent = o.ringkasan.belumMula + (o.ringkasan.tiadaRakan||0);
+
+    const statusBadge = (status) => {
+        if (status === 'Selesai') return '<span class="inline-block px-2 py-1 rounded font-bold text-[11px] bg-green-100 text-green-800"><i class="fas fa-check-circle me-1"></i>Selesai</span>';
+        if (status === 'Sebahagian') return '<span class="inline-block px-2 py-1 rounded font-bold text-[11px] bg-amber-100 text-amber-800"><i class="fas fa-hourglass-half me-1"></i>Sebahagian</span>';
+        if (status === 'Tiada Rakan Sekelas') return '<span class="inline-block px-2 py-1 rounded font-bold text-[11px] bg-slate-100 text-slate-500"><i class="fas fa-minus-circle me-1"></i>Tiada Rakan</span>';
+        return '<span class="inline-block px-2 py-1 rounded font-bold text-[11px] bg-red-100 text-red-800"><i class="fas fa-times-circle me-1"></i>Belum Membuat</span>';
+    };
+
+    document.getElementById('peerStatusBody').innerHTML = o.data.map(s => `
+        <tr>
+            <td class="p-3 font-bold text-[13px]">${s.nama}</td>
+            <td class="p-3 font-mono-score text-[12px] text-slate-500">${s.noKP}</td>
+            <td class="p-3 text-[12px]">${s.kelas}</td>
+            <td class="p-3 text-center font-mono-score font-bold">${s.wajib}</td>
+            <td class="p-3 text-center font-mono-score font-bold" style="color:var(--hp8-color);">${s.selesai}</td>
+            <td class="p-3 text-center font-mono-score font-bold" style="color:${s.baki>0?'#b91c1c':'#94a3b8'};">${s.baki}</td>
+            <td class="p-3 text-center">${statusBadge(s.status)}</td>
+        </tr>`).join('') || `<tr><td colspan="7" class="text-center p-8 text-slate-400">Tiada rekod pelajar dalam skop ini.</td></tr>`;
+}
+
+async function loadModerationSampling() {
+    if (!isAdminUser) return;
+    try {
+        const selEl = document.getElementById('moderationClassFilter');
+        const kelas = selEl ? selEl.value : "";
+        const r = await fetch(`${API}?action=getModerationSampling&email=${encodeURIComponent(curLecEmail)}&kelas=${encodeURIComponent(kelas)}&task=all`);
+        const o = await r.json();
+        if (o.status === 'success') renderModerationSampling(o);
+    } catch(e) { showToast('Gagal memuat modul moderasi.', 'warn'); }
+}
+
+function renderModerationSampling(o) {
+    window_modSamplesData = o.samples || [];
+
+    if (o.examinerStats) {
+        const statsEl = document.getElementById('modExaminerStats');
+        if (statsEl) statsEl.textContent = `${o.examinerStats.completed} / ${o.examinerStats.total}`;
+    }
+
+    const extremes = (o.extremesHigh || []).concat(o.extremesLow || []);
+    
+    document.getElementById('modExtremesCount').textContent = extremes.length;
+    document.getElementById('extremeTotalBadge').textContent = `${extremes.length} Kes Dikesan`;
+    document.getElementById('modExtremesBody').innerHTML = extremes.map(s => {
+        const isHigh = s.markahPct >= 90;
+        const catText = isHigh ? 'Amat Cemerlang (≥90%)' : 'Gagal (<50%)';
+        const catBadge = isHigh ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-red-100 text-red-900 border-red-300';
+        return `<tr>
+            <td><span class="px-2 py-1 rounded text-[10px] font-extrabold border ${catBadge}">${catText}</span></td>
+            <td class="font-bold">${s.nama}</td>
+            <td class="font-mono-score text-slate-500">${s.kp}</td>
+            <td>${s.kelas}</td>
+            <td class="text-center font-mono-score font-bold">${fmt1(s.markah)} / ${s.maxPossible} (${s.markahPct.toFixed(1)}%)</td>
+            <td class="text-center font-bold">${s.gred}</td>
+            <td>${s.penilai}</td>
+            <td class="text-center text-red-700 font-bold text-[11px]"><i class="fas fa-pen-alt me-1 text-green-600"></i> Semakan Pen Hijau Khas</td>
+        </tr>`;
+    }).join('') || `<tr><td colspan="8" class="text-center p-6 text-slate-400">Tiada kes ekstrem dikesan bagi keseluruhan 100%.</td></tr>`;
+
+    document.getElementById('modGroupTinggi').textContent = o.stats.tinggiCount || 0;
+    document.getElementById('modGroupSederhana').textContent = o.stats.sederhanaCount || 0;
+    document.getElementById('modGroupRendah').textContent = o.stats.rendahCount || 0;
+
+    document.getElementById('modGroupTinggiRange').textContent = o.stats.tinggiRange || '-';
+    document.getElementById('modGroupSederhanaRange').textContent = o.stats.sederhanaRange || '-';
+    document.getElementById('modGroupRendahRange').textContent = o.stats.rendahRange || '-';
+
+    const lockedCount = window_modSamplesData.filter(s => s.isLocked).length;
+    document.getElementById('modSamplesCountBadge').textContent = `${lockedCount}/${window_modSamplesData.length} Sampel Terkunci`;
+
+    document.getElementById('modSamplesBody').innerHTML = window_modSamplesData.map((s, idx) => {
+        const isLocked = !!s.isLocked;
+        const kelBg = s.kelompok.includes('Tinggi') 
+            ? 'bg-indigo-100 text-indigo-900 border-indigo-300 font-black' 
+            : s.kelompok.includes('Sederhana') 
+            ? 'bg-amber-100 text-amber-900 border-amber-300 font-black' 
+            : 'bg-emerald-100 text-emerald-900 border-emerald-300 font-black';
+
+        let nameDisplayHTML = '';
+        if (isLocked) {
+            nameDisplayHTML = `<div class="font-bold text-slate-800 flex items-center gap-2">
+                <span>${s.nama}</span>
+                <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-black px-2 py-0.5 rounded">🔒 TERKUNCI</span>
+            </div>`;
+        } else {
+            const opts = s.allOptions || [s];
+            nameDisplayHTML = `<select id="mod_select_${idx}" onchange="onSelectSampleCandidate(${idx})" class="w-full text-xs font-bold p-1.5 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-amber-500">
+                ${opts.map(opt => `<option value="${opt.kp}" ${opt.kp === s.kp ? 'selected' : ''}>${opt.nama} (${fmt1(opt.markah)}/${opt.maxPossible})</option>`).join('')}
+            </select>`;
+        }
+
+        return `<tr id="mod_row_${idx}" class="${isLocked ? 'bg-emerald-50/30' : 'bg-white'}">
+            <td class="text-center font-bold">${s.bil}</td>
+            <td class="text-xs font-extrabold text-slate-700">${s.penilai}</td>
+            <td>${nameDisplayHTML}</td>
+            <td class="font-mono-score text-slate-500 text-xs" id="mod_kp_${idx}">${s.kp}</td>
+            <td id="mod_kelas_${idx}">${s.kelas}</td>
+            <td class="text-center font-mono-score font-bold" id="mod_score_${idx}">${fmt1(s.markah)} / ${s.maxPossible} (${s.markahPct.toFixed(1)}%)</td>
+            <td class="text-center font-bold" id="mod_gred_${idx}">${s.gred}</td>
+            <td class="text-center" id="mod_kelompok_${idx}"><span class="px-2.5 py-1 rounded text-[10px] font-bold border ${kelBg}">${s.kelompok}</span></td>
+            <td class="text-center">
+                ${isLocked 
+                    ? `<button onclick="handleUnlockSingleSample('${s.penilai}')" class="px-2.5 py-1 text-[10px] font-extrabold bg-red-100 text-red-800 border border-red-300 hover:bg-red-200 rounded shadow-xs">
+                        🔓 Buka Kunci
+                       </button>`
+                    : `<button onclick="handleLockSingleSample(${idx})" class="px-2.5 py-1 text-[10px] font-extrabold bg-emerald-700 text-white hover:bg-emerald-800 rounded shadow-xs">
+                        🔒 Kunci Sampel Ini
+                       </button>`
+                }
+            </td>
+        </tr>`;
+    }).join('') || `<tr><td colspan="9" class="text-center p-8 text-slate-400">Tiada sampel moderasi dapat dijana lagi.</td></tr>`;
+}
+
+function onSelectSampleCandidate(idx) {
+    const sel = document.getElementById(`mod_select_${idx}`);
+    if (!sel || !window_modSamplesData[idx]) return;
+
+    const selectedKP = sel.value;
+    const item = window_modSamplesData[idx];
+    const opts = item.allOptions || [];
+    const chosen = opts.find(o => o.kp === selectedKP);
+
+    if (chosen) {
+        item.kp = chosen.kp;
+        item.nama = chosen.nama;
+        item.kelas = chosen.kelas;
+        item.markah = chosen.markah;
+        item.markahPct = chosen.markahPct;
+        item.maxPossible = chosen.maxPossible;
+        item.gred = chosen.gred;
+        item.kelompok = chosen.kelompok || "Kelompok Sederhana";
+
+        document.getElementById(`mod_kp_${idx}`).textContent = chosen.kp;
+        document.getElementById(`mod_kelas_${idx}`).textContent = chosen.kelas;
+        document.getElementById(`mod_score_${idx}`).textContent = `${fmt1(chosen.markah)} / ${chosen.maxPossible} (${chosen.markahPct.toFixed(1)}%)`;
+        document.getElementById(`mod_gred_${idx}`).textContent = chosen.gred;
+        
+        const bandCat = item.kelompok;
+        const kelBg = bandCat.includes('Tinggi') 
+            ? 'bg-indigo-100 text-indigo-900 border-indigo-300 font-black' 
+            : bandCat.includes('Sederhana') 
+            ? 'bg-amber-100 text-amber-900 border-amber-300 font-black' 
+            : 'bg-emerald-100 text-emerald-900 border-emerald-300 font-black';
+        document.getElementById(`mod_kelompok_${idx}`).innerHTML = `<span class="px-2.5 py-1 rounded text-[10px] font-bold border ${kelBg}">${bandCat}</span>`;
+    }
+}
+
+async function handleLockSingleSample(idx) {
+    const s = window_modSamplesData[idx];
+    if (!s) return;
+
+    const classEl = document.getElementById('moderationClassFilter');
+    const kelas = classEl ? classEl.value : "";
+
+    showToast(`Mengunci sampel untuk ${s.penilai}...`, 'success');
+
+    try {
+        await fetch(API, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({
+                action: "lockSingleSample",
+                task: "all",
+                kelasFilter: kelas,
+                bil: s.bil,
+                kp: s.kp,
+                nama: s.nama,
+                kelas: s.kelas,
+                markah: s.markah,
+                markahPct: s.markahPct,
+                maxPossible: s.maxPossible,
+                gred: s.gred,
+                penilai: s.penilai,
+                kelompok: s.kelompok,
+                by: curLecEmail
+            })
+        });
+        await new Promise(r => setTimeout(r, 1200));
+        showToast(`Sampel ${s.nama} (${s.penilai}) KINI TERKUNCI!`, 'success');
+        loadModerationSampling();
+    } catch(e) { showToast('Ralat mengunci sampel.', 'warn'); }
+}
+
+async function handleUnlockSingleSample(penilai) {
+    const classEl = document.getElementById('moderationClassFilter');
+    const kelas = classEl ? classEl.value : "";
+
+    showToast(`Membuka kunci sampel ${penilai}...`, 'warn');
+
+    try {
+        await fetch(API, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({
+                action: "unlockSingleSample",
+                task: "all",
+                kelasFilter: kelas,
+                penilai: penilai
+            })
+        });
+        await new Promise(r => setTimeout(r, 1200));
+        showToast(`Kunci sampel ${penilai} telah dibuka.`, 'success');
+        loadModerationSampling();
+    } catch(e) { showToast('Ralat membuka kunci.', 'warn'); }
+}
+
+async function printIndividualReport(targetKP) {
+    const kp = targetKP || (curS ? curS.No_KP : null);
+    if (!kp) return showToast('Sila pilih pelajar dahulu.', 'warn');
+
+    showToast('Menjana Laporan Dossier Individu...', 'success');
+
+    try {
+        const r = await fetch(`${API}?action=getIndividualReportData&noKP=${encodeURIComponent(kp)}`);
+        const o = await r.json();
+
+        if (o.status !== 'success' || !o.data) return showToast('Gagal menarik data individu.', 'warn');
+
+        document.getElementById('printIndividualArea').innerHTML = renderSingleDossierHTML(o.data);
+
+        document.querySelectorAll('.active-print').forEach(el => el.classList.remove('active-print'));
+        const pArea = document.getElementById('printIndividualArea');
+        pArea.classList.add('active-print');
+
+        document.body.classList.add('printing-mode');
+        setTimeout(() => window.print(), 200);
+    } catch (e) { showToast('Ralat mencetak laporan individu.', 'warn'); }
+}
+
+async function printBatchClassIndividualReports() {
+    const selEl = document.getElementById('printClassFilter');
+    const kelas = selEl ? selEl.value : "";
+
+    showToast('Menjana Dossier Pukal Seluruh Kelas...', 'success');
+
+    try {
+        const r = await fetch(`${API}?action=getBatchIndividualReportData&email=${encodeURIComponent(curLecEmail)}&kelas=${encodeURIComponent(kelas)}`);
+        const o = await r.json();
+
+        if (o.status !== 'success' || !o.data || !o.data.length) return showToast('Tiada rekod pelajar untuk kelas ini.', 'warn');
+
+        const dossiersHTML = o.data.map((item) => `
+            <div class="dossier-page">
+                ${renderSingleDossierHTML(item)}
+            </div>
+        `).join('');
+
+        document.getElementById('printIndividualArea').innerHTML = dossiersHTML;
+
+        document.querySelectorAll('.active-print').forEach(el => el.classList.remove('active-print'));
+        const pArea = document.getElementById('printIndividualArea');
+        pArea.classList.add('active-print');
+
+        document.body.classList.add('printing-mode');
+        setTimeout(() => window.print(), 300);
+    } catch(e) { showToast('Ralat mencetak pukal dossier.', 'warn'); }
+}
+
+function renderSingleDossierHTML(d) {
+    const p = d.profile || {};
+    const m = d.markah || {};
+    const r = d.rubrik || {};
+    const peer = d.peer || null;
+    const rawImg = p.linkGambar || p.Link_Gambar || "";
+    const imgUrl = fixDriveUrl(rawImg);
+
+    return `
+    <div style="font-family:'Plus Jakarta Sans', sans-serif; color:#0f172a; padding:10px;">
+        <div class="print-header">
+            <h1>INSTITUT PENDIDIKAN GURU KAMPUS DARULAMAN</h1>
+            <h2>DOSSIER PELAPORAN PEMARKAHAN INDIVIDU — MPU3221</h2>
+            <div style="font-size:9px; font-weight:700; color:#475569; margin-top:2px;">KURSUS PENGURUSAN PERSATUAN (PENTAKSIRAN BERTERUSAN 100%)</div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; border:1px solid #cbd5e1; border-radius:6px; padding:8px 12px; margin-bottom:12px; background:#f8fafc;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:55px; height:70px; border:1px solid #94a3b8; border-radius:4px; overflow:hidden; background:#e2e8f0; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+                    ${imgUrl ? `<img src="${imgUrl}" referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'font-size:8px; font-weight:800; color:#64748b; text-align:center; text-transform:uppercase;\\'>TIADA GAMBAR</div>';" style="width:100%; height:100%; object-fit:cover;">` : '<div style="font-size:8px; font-weight:800; color:#64748b; text-align:center; text-transform:uppercase;">TIADA GAMBAR</div>'}
+                </div>
+                <div>
+                    <div style="font-size:13px; font-weight:800; color:#1e3a8a;">${p.nama || '--'}</div>
+                    <div style="font-size:10px; font-family:'Space Mono', monospace; color:#475569; margin-top:2px;">NO. KP: ${p.noKP || '--'} &nbsp;|&nbsp; KELAS: ${p.kelas || '--'}</div>
+                    <div style="font-size:9.5px; color:#64748b; margin-top:2px;">PENSYARAH PENILAI: <strong>${m.penilai || p.penilai || '--'}</strong></div>
+                </div>
+            </div>
+            <div style="text-align:right; border-left:2px solid #cbd5e1; padding-left:14px;">
+                <div style="font-size:8.5px; font-weight:800; text-transform:uppercase; color:#64748b;">JUMLAH MARKAH</div>
+                <div style="font-size:22px; font-weight:800; font-family:'Space Mono', monospace; color:#1e3a8a;">${fmt1(m.total || 0)}<span style="font-size:11px; color:#94a3b8;">/100</span></div>
+                <div style="font-size:11px; font-weight:800; color:#b45309;">GRED: ${m.gred || '--'}</div>
+            </div>
+        </div>
+
+        ${m.justifikasi && m.justifikasi !== '-' ? `
+        <div style="font-size:9.5px; background:#fefce8; border:1px solid #fde047; padding:6px 10px; border-radius:4px; margin-bottom:10px; color:#713f12;">
+            <strong>JUSTIFIKASI CEMERLANG (A+):</strong> ${m.justifikasi}
+        </div>` : ''}
+
+        <div class="print-section-title">PECAHAN SKOR SUB-RUBRIK MENTAH</div>
+        <table class="print-table" style="margin-bottom:10px;">
+            <thead>
+                <tr>
+                    <th style="width:220px;">Komponen Rubrik (HPK)</th>
+                    <th class="center">1</th><th class="center">2</th><th class="center">3</th>
+                    <th class="center">4</th><th class="center">5</th><th class="center">6</th>
+                    <th class="center" style="background:#e2e8f0;">JUMLAH</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Tugasan 1: HP1 — Pengetahuan &amp; Artifak</strong> (Maks 30)</td>
+                    <td class="center">${fmt1(r.r1||0)}</td><td class="center">${fmt1(r.r2||0)}</td><td class="center">${fmt1(r.r3||0)}</td>
+                    <td class="center">${fmt1(r.r4||0)}</td><td class="center">${fmt1(r.r5||0)}</td><td class="center">${fmt1(r.r6||0)}</td>
+                    <td class="center font-bold" style="background:#f1f5f9;">${fmt1(m.hp1||0)}/30</td>
+                </tr>
+                <tr>
+                    <td><strong>Tugasan 1: HP5 — Komunikasi Penulisan</strong> (Maks 10)</td>
+                    <td class="center">${fmt1(r.g1||0)}</td><td class="center">${fmt1(r.g2||0)}</td><td class="center">${fmt1(r.g3||0)}</td>
+                    <td class="center">${fmt1(r.g4||0)}</td><td class="center">-</td><td class="center">-</td>
+                    <td class="center font-bold" style="background:#f1f5f9;">${fmt1(m.hp5||0)}/10</td>
+                </tr>
+                <tr>
+                    <td><strong>Tugasan 2: HP8 — Kapasiti Kepimpinan</strong> (Maks 30)</td>
+                    <td class="center">${fmt1(r.p1||0)}</td><td class="center">${fmt1(r.p2||0)}</td><td class="center">${fmt1(r.p3||0)}</td>
+                    <td class="center">-</td><td class="center">-</td><td class="center">-</td>
+                    <td class="center font-bold" style="background:#f1f5f9;">${fmt1(m.hp8||0)}/30</td>
+                </tr>
+                <tr>
+                    <td><strong>Tugasan 2: HP10 — Minda Keusahawanan</strong> (Maks 30)</td>
+                    <td class="center">${fmt1(r.k1||0)}</td><td class="center">${fmt1(r.k2||0)}</td><td class="center">${fmt1(r.k3||0)}</td>
+                    <td class="center">-</td><td class="center">-</td><td class="center">-</td>
+                    <td class="center font-bold" style="background:#f1f5f9;">${fmt1(m.hp10||0)}/30</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="print-section-title">RINGKASAN PENILAIAN RAKAN SEBAYA 360° (HP8)</div>
+        ${peer ? `
+        <div style="display:flex; justify-content:space-between; align-items:center; border:1px solid #e2e8f0; padding:6px 10px; font-size:9.5px; margin-bottom:10px; border-radius:4px; background:#fafafa;">
+            <div>Purata Keseluruhan Rakan: <strong style="font-size:12px; color:#1e3a8a;">${peer.avg.toFixed(2)} / 5.00</strong> (${peer.count} Penilai)</div>
+            <div style="display:flex; gap:10px; font-size:8.5px; font-weight:700;">
+                <span>Q1 Kepimpinan: ${peer.avgDims[0]}</span>
+                <span>Q2 Autonomi: ${peer.avgDims[1]}</span>
+                <span>Q3 Tanggungjawab: ${peer.avgDims[2]}</span>
+                <span>Q4 Penganjuran: ${peer.avgDims[3]}</span>
+                <span>Q5 Kerjasama: ${peer.avgDims[4]}</span>
+            </div>
+        </div>` : '<div style="font-size:9px; color:#94a3b8; italic; margin-bottom:10px;">*Tiada rekod penilaian rakan sebaya diterima buat masa ini.</div>'}
+
+        <div class="print-signoff" style="margin-top:30px;">
+            <div>
+                <div style="font-size:9px; font-weight:700;">Disediakan Oleh (Pensyarah Penilai):</div>
+                <div class="line" style="margin-top:35px;">Tandatangan &amp; Cop Rasmi</div>
+                <div style="font-size:8.5px; color:#64748b; margin-top:2px;">Tarikh: ________________________</div>
+            </div>
+            <div>
+                <div style="font-size:9px; font-weight:700;">Disahkan Oleh (Ketua Unit Kokurikulum):</div>
+                <div class="line" style="margin-top:35px;">Tandatangan &amp; Cop Rasmi</div>
+                <div style="font-size:8.5px; color:#64748b; margin-top:2px;">Tarikh: ________________________</div>
+            </div>
+        </div>
+
+        <div class="print-footer-note" style="margin-top:14px;">
+            Dokumen ini dijana secara automatik oleh Portal Pemarkahan MPU3221, IPGKDA pada ${new Date().toLocaleDateString('ms-MY')}.
+        </div>
+    </div>`;
+}
+
+async function printReport(fromLaporanTab) {
+    const selId = fromLaporanTab ? 'laporanClassFilter' : 'printClassFilter';
+    const selEl = document.getElementById(selId);
+    const kelas = selEl ? selEl.value : "";
+
+    const filtered = kelas ? sData.filter(s => (s.Kelas||"").toString() === kelas) : sData;
+    if (!filtered.length) return showToast('Tiada pelajar untuk dicetak dalam skop ini.', 'warn');
+
+    document.getElementById('pStudentBody').innerHTML = filtered.map((s, i) => {
+        const m = s.markahSediaAda || {}, t = roundTo1((m.hp1||0)+(m.hp5||0)+(m.hp8||0)+(m.hp10||0)), g = t>0 ? calculateGred(t) : '--';
+        return `<tr>
+            <td class="center">${i+1}</td>
+            <td>${s.Nama_Pelajar}</td>
+            <td>${s.No_KP}</td>
+            <td>${s.Kelas}</td>
+            <td class="center">${m.hp1 !== undefined ? fmt1(m.hp1) : '-'}</td>
+            <td class="center">${m.hp5 !== undefined ? fmt1(m.hp5) : '-'}</td>
+            <td class="center">${m.hp8 !== undefined ? fmt1(m.hp8) : '-'}</td>
+            <td class="center">${m.hp10 !== undefined ? fmt1(m.hp10) : '-'}</td>
+            <td class="center"><strong>${t ? fmt1(t) : '-'}</strong></td>
+            <td class="center"><strong>${g}</strong></td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('pLecName').textContent = document.getElementById('lecName').textContent || curLecEmail;
+    document.getElementById('pScope').textContent = kelas ? `Kelas: ${kelas}` : (isAdminUser ? 'SEMUA KELAS (Admin)' : 'Semua Kelas Ditugaskan');
+    document.getElementById('pDate').textContent = new Date().toLocaleString('ms-MY', { dateStyle:'long', timeStyle:'short' });
+
+    try {
+        const r = await fetch(`${API}?action=getGradeSummary&email=${encodeURIComponent(curLecEmail)}&kelas=${encodeURIComponent(kelas)}`); const o = await r.json();
+        if (o.status === 'success') {
+            document.getElementById('pGradeBody').innerHTML = o.bands.map(b => `<tr><td>${b.skala}</td><td class="center">${b.gred}</td><td class="center">${b.jumlah}</td><td class="center">${b.peratus.toFixed(2)}</td></tr>`).join('');
+            document.getElementById('pJumlah').textContent = o.jumlah;
+            document.getElementById('pMin').textContent = o.jumlah > 0 ? o.purata.toFixed(2) : '--';
+            document.getElementById('pSD').textContent = o.jumlah > 0 ? o.sisihanPiawai.toFixed(2) : '--';
+        }
+    } catch(e) {
+        document.getElementById('pGradeBody').innerHTML = '';
+        document.getElementById('pJumlah').textContent = '0'; document.getElementById('pMin').textContent = '--'; document.getElementById('pSD').textContent = '--';
+    }
+
+    document.querySelectorAll('.active-print').forEach(el => el.classList.remove('active-print'));
+    document.getElementById('printArea').classList.add('active-print');
+
+    document.body.classList.add('printing-mode');
+    setTimeout(() => window.print(), 150);
+}
+
+async function printModerationReport() {
+    if (!isAdminUser) return showToast('Modul Moderasi hanya untuk Super Admin.', 'warn');
+    
+    document.getElementById('modPTask').textContent = "Pemarkahan Keseluruhan 100%";
+    document.getElementById('modPDate').textContent = new Date().toLocaleDateString('ms-MY');
+
+    const sampleTable = document.getElementById('moderationSampleTable');
+    if (sampleTable) {
+        const tempContainer = document.createElement('div');
+        tempContainer.innerHTML = sampleTable.querySelector('tbody').innerHTML;
+
+        // Bersihkan dropdown <select> dan butang daripada paparan cetakan
+        tempContainer.querySelectorAll('select').forEach(sel => {
+            const selectedText = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : sel.value;
+            const span = document.createElement('span');
+            span.textContent = selectedText;
+            sel.parentNode.replaceChild(span, sel);
+        });
+        tempContainer.querySelectorAll('button').forEach(btn => btn.remove());
+
+        document.getElementById('modPSampleBody').innerHTML = tempContainer.innerHTML;
+    }
+
+    document.querySelectorAll('.active-print').forEach(el => el.classList.remove('active-print'));
+    document.getElementById('printModerationArea').classList.add('active-print');
+
+    document.body.classList.add('printing-mode');
+    setTimeout(() => window.print(), 150);
+}
+
+window.addEventListener('afterprint', () => {
+    document.body.classList.remove('printing-mode');
+    document.querySelectorAll('.active-print').forEach(el => el.classList.remove('active-print'));
+});
+
+function calculateStats(scoreMap) {
+    const values = Object.values(scoreMap);
+    const n = values.length;
+    if (n === 0) return { mean: 0, sd: 0, n: 0 };
+    
+    const mean = values.reduce((a, b) => a + b, 0) / n;
+    const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / n;
+    return { mean, sd: Math.sqrt(variance), n };
+}
+
+function janaCadanganPintar() {
+    if (!isAdminUser) {
+        showToast('Akses Terhad: Khusus untuk Super Admin sahaja.', 'warn');
+        return;
+    }
+
+    const targetSD = parseFloat(document.getElementById('simTargetSP').value) || 5.0;
+    const maxDelta = parseFloat(document.getElementById('simMaxDelta').value) || 5.0;
+    const kelasFilter = document.getElementById('simClassFilter').value;
+
+    let pool = sData.filter(s => s.markahSediaAda && s.markahSediaAda.total > 0);
+    if (kelasFilter) {
+        pool = pool.filter(s => (s.Kelas || '').toString() === kelasFilter);
+    }
+
+    if (pool.length < 3) {
+        showToast('Bilangan pelajar terlalu sedikit untuk simulasi.', 'warn');
+        return;
+    }
+
+    const currentScores = {};
+    const metadata = {};
+    pool.forEach(s => {
+        const normKP = normalizeKP(s.No_KP);
+        currentScores[normKP] = roundTo1(s.markahSediaAda.total);
+        metadata[normKP] = { nama: s.Nama_Pelajar, kelas: s.Kelas, origKP: s.No_KP };
+    });
+
+    const initialStats = calculateStats(currentScores);
+    let workingScores = JSON.parse(JSON.stringify(currentScores));
+    let currentSD = initialStats.sd;
+
+    const suggestions = [];
+    const processedKPs = new Set();
+    const MAX_ITERATIONS = 50;
+    let iter = 0;
+
+    while (currentSD < targetSD && iter < MAX_ITERATIONS) {
+        let bestCandidate = null;
+
+        for (const normKP in workingScores) {
+            if (processedKPs.has(normKP)) continue;
+
+            const score = workingScores[normKP];
+            const gred = calculateGred(score);
+            const bMin = roundTo1(BAND_MIN[gred]);
+            const bMax = roundTo1(BAND_MAX[gred]);
+
+            [bMin, bMax].forEach(targetBoundary => {
+                const delta = Math.abs(targetBoundary - score);
+                if (delta < 0.1 || delta > maxDelta) return;
+
+                if (calculateGred(targetBoundary) !== gred) return;
+
+                const tempScores = Object.assign({}, workingScores, { [normKP]: targetBoundary });
+                const tempStats = calculateStats(tempScores);
+
+                if (!bestCandidate || tempStats.sd > bestCandidate.newSD) {
+                    bestCandidate = {
+                        normKP,
+                        originalScore: score,
+                        targetScore: targetBoundary,
+                        gred,
+                        newSD: tempStats.sd,
+                        delta: targetBoundary - score
+                    };
+                }
+            });
+        }
+
+        if (!bestCandidate || bestCandidate.newSD <= currentSD) break;
+
+        workingScores[bestCandidate.normKP] = bestCandidate.targetScore;
+        processedKPs.add(bestCandidate.normKP);
+        currentSD = bestCandidate.newSD;
+
+        suggestions.push({
+            kp: bestCandidate.normKP,
+            nama: metadata[bestCandidate.normKP].nama,
+            kelas: metadata[bestCandidate.normKP].kelas,
+            gred: bestCandidate.gred,
+            val: roundTo1(currentScores[bestCandidate.normKP]),
+            target: roundTo1(bestCandidate.targetScore),
+            delta: roundTo1(bestCandidate.targetScore - currentScores[bestCandidate.normKP])
+        });
+
+        iter++;
+    }
+
+    window._simOriginalSnapshot = JSON.parse(JSON.stringify(currentScores));
+    window._simCurrentSuggestions = suggestions;
+    baseSimStats = initialStats;
+
+    renderSimulationUI(initialStats, suggestions, targetSD);
+}
+
+function renderSimulationUI(initialStats, suggestions, targetSD) {
+    document.getElementById('simResultsEmpty').style.display = 'none';
+    document.getElementById('simResults').style.display = 'block';
+
+    document.getElementById('simSPBefore').textContent = initialStats.sd.toFixed(4);
+    document.getElementById('simSuggestBadge').textContent = `${suggestions.length} Cadangan`;
+
+    const tbody = document.getElementById('simSuggestBody');
+    if (suggestions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-slate-400">
+            ${initialStats.sd >= targetSD ? 'Sasaran SP telah sedia dicapai tanpa sebarang perubahan!' : 'Tiada pergerakan markah yang sesuai dijumpai. Cuba naikkan Had Maksimum Perubahan.'}
+        </td></tr>`;
+    } else {
+        tbody.innerHTML = suggestions.map((s, idx) => `
+            <tr>
+                <td class="text-center">
+                    <input type="checkbox" class="sim-check w-4 h-4 text-purple-600 rounded" data-idx="${idx}" checked onchange="updateSimPreviewLive()">
+                </td>
+                <td class="font-bold text-[13px]">${s.nama}</td>
+                <td class="font-mono-score text-[11px] text-slate-500">${s.kp}</td>
+                <td class="text-center font-bold"><span class="px-2 py-0.5 rounded bg-slate-100 border">${s.gred}</span></td>
+                <td class="text-center font-mono-score">${fmt1(s.val)}</td>
+                <td class="text-center font-mono-score font-bold text-purple-700">${fmt1(s.target)}</td>
+                <td class="text-center font-mono-score ${s.delta > 0 ? 'text-green-600' : 'text-red-600'}">
+                    ${s.delta > 0 ? '+' : ''}${fmt1(s.delta)}
+                </td>
+                <td class="text-center">
+                    <button onclick="selectStudent('${s.kp}'); showLecTab('marking');" class="px-2 py-1 text-[11px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 rounded-lg shadow-xs flex items-center gap-1 mx-auto" title="Semak markah pelajar ini">
+                        <i class="fas fa-search me-1"></i> Semak
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    updateSimPreviewLive();
+}
+
+function updateSimPreviewLive() {
+    const activeScores = JSON.parse(JSON.stringify(window._simOriginalSnapshot || {}));
+    const checkboxes = document.querySelectorAll('.sim-check');
+    let selectedCount = 0;
+
+    checkboxes.forEach(cb => {
+        if (cb.checked) {
+            const idx = cb.dataset.idx;
+            const item = window._simCurrentSuggestions[idx];
+            if (item) {
+                activeScores[item.kp] = item.target;
+                selectedCount++;
+            }
+        }
+    });
+
+    const newStats = calculateStats(activeScores);
+
+    document.getElementById('simSPAfter').textContent = newStats.sd.toFixed(4);
+    document.getElementById('simCount').textContent = selectedCount;
+
+    renderSimGroupedChart(window._simOriginalSnapshot || {}, activeScores);
+}
+
+function toggleAllSim(masterCheckbox) {
+    document.querySelectorAll('.sim-check').forEach(cb => cb.checked = masterCheckbox.checked);
+    updateSimPreviewLive();
+}
+
+function renderSimGroupedChart(beforeScores, afterScores) {
+    const bands = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "E", "F"];
+
+    const getDistribution = (scoresMap) => {
+        const dist = {};
+        bands.forEach(b => dist[b] = 0);
+        Object.values(scoresMap).forEach(score => {
+            const gred = calculateGred(score);
+            dist[gred]++;
+        });
+        return bands.map(b => dist[b]);
+    };
+
+    const dataBefore = getDistribution(beforeScores);
+    const dataAfter = getDistribution(afterScores);
+
+    if (simChart) {
+        simChart.destroy();
+        simChart = null;
+    }
+
+    const c = document.getElementById('simChart');
+    if (!c) return;
+
+    simChart = new Chart(c.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: bands,
+            datasets: [
+                {
+                    label: 'Markah Sekarang',
+                    data: dataBefore,
+                    backgroundColor: '#cbd5e1',
+                    borderColor: '#94a3b8',
+                    borderWidth: 1,
+                    borderRadius: 4
+                },
+                {
+                    label: 'Selepas Simulasi (Cadangan)',
+                    data: dataAfter,
+                    backgroundColor: '#7c3aed',
+                    borderColor: '#6d28d9',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        afterBody: () => "Nota: Ketinggian bar yang identikal membuktikan gred tidak berubah!"
+                    }
+                }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { precision: 0 } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+async function terapkanCadanganSim() {
+    if (!isAdminUser) { showToast('Akses Terhad: Khusus untuk Super Admin.', 'warn'); return; }
+
+    const checks = document.querySelectorAll('.sim-check:checked');
+    if (checks.length === 0) return showToast('Tiada cadangan dipilih.', 'warn');
+    if (!confirm(`Anda pasti mahu terapkan ${checks.length} perubahan markah ke pangkalan data?`)) return;
+
+    const btn = document.getElementById('btnTerapkanSim');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Menerapkan Perubahan...';
+
+    const payload = [];
+    checks.forEach(c => {
+        const s = window._simCurrentSuggestions[c.dataset.idx];
+        if (s) {
+            payload.push({ noKP: s.kp, newTotal: roundTo1(s.target), gredAsal: s.gred });
+        }
+    });
+
+    try {
+        await fetch(API, { method:'POST', mode:'no-cors', body: JSON.stringify({
+            action: "applySimulationChanges",
+            changes: payload,
+            by: curLecEmail
+        })});
+        await new Promise(r => setTimeout(r, 1500));
+        showToast(`${payload.length} rekod berjaya dikemas kini dalam pangkalan data.`, 'success');
+        await _refreshLecData();
+        document.getElementById('simResults').style.display = 'none';
+        document.getElementById('simResultsEmpty').style.display = 'flex';
+        window._simOriginalSnapshot = null;
+        window._simCurrentSuggestions = [];
+    } catch(e) {
+        showToast('Ralat menerapkan perubahan.', 'warn');
+    }
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-double me-2"></i> Terapkan Perubahan Dipilih ke Pangkalan Data';
+}
+
+function logout() { localStorage.clear(); location.reload(); }
+
+window.selectStudent = selectStudent;
+window.showLecTab = showLecTab;
+window.janaCadanganPintar = janaCadanganPintar;
+window.updateSimPreviewLive = updateSimPreviewLive;
+window.toggleAllSim = toggleAllSim;
+window.terapkanCadanganSim = terapkanCadanganSim;
+window.filterLaporanStudents = filterLaporanStudents;
+window.filterBySpecificGrade = filterBySpecificGrade;
+
+window.onload = () => { 
+    const u=localStorage.getItem('userMPU'); 
+    if(u){try{renderStudent(JSON.parse(u));}catch(e){localStorage.clear();}} 
+    const le=localStorage.getItem('le'); 
+    if(le) initLecturer(le,localStorage.getItem('leName'), localStorage.getItem('leAdmin')==='1'); 
+};
+</script>
+
+<div class="disclaimer-footer">
+    <div style="display:flex; justify-content:center; gap:8px; margin-bottom:8px;"><i class="fas fa-university text-slate-300 text-lg"></i></div>
+    <div class="font-bold text-slate-600 uppercase tracking-wider mb-2">Aplikasi Maklumat Penilaian Akademik Tertutup</div>
+    <div>Sistem ini dikhususkan untuk rekod rasmi pensyarah dan pelajar <strong class="text-slate-700">Unit Kokurikulum, Institut Pendidikan Guru Kampus Darulaman</strong>.</div>
+    <div class="mt-2 text-[10px]">Penyelaras Kursus MPU3221 &copy; 2026 Hak Cipta Terpelihara.</div>
+</div>
+
+<div id="printArea">
+    <div class="print-header">
+        <h1>INSTITUT PENDIDIKAN GURU KAMPUS DARULAMAN</h1>
+        <h2>Laporan Pemarkahan Sebelum Moderasi — MPU3221 (Pengurusan Persatuan)</h2>
+    </div>
+    <div class="print-meta">
+        <span><strong>Disediakan Oleh:</strong> <span id="pLecName">--</span></span>
+        <span><strong>Skop:</strong> <span id="pScope">--</span></span>
+        <span><strong>Tarikh Cetakan:</strong> <span id="pDate">--</span></span>
+    </div>
+
+    <div class="print-section-title">Senarai &amp; Pemarkahan Pelajar</div>
+    <table class="print-table">
+        <thead>
+            <tr>
+                <th>Bil</th><th>Nama Pelajar</th><th>No. KP</th><th>Kelas</th>
+                <th class="center">HP1<br>(30)</th><th class="center">HP5<br>(10)</th><th class="center">HP8<br>(30)</th><th class="center">HP10<br>(30)</th>
+                <th class="center">Jumlah</th><th class="center">Gred</th>
+            </tr>
+        </thead>
+        <tbody id="pStudentBody"></tbody>
+    </table>
+
+    <div class="print-section-title">Analisis Taburan Gred</div>
+    <table class="print-table" style="max-width:420px;">
+        <thead><tr><th>Skala</th><th class="center">Gred</th><th class="center">Jumlah</th><th class="center">%</th></tr></thead>
+        <tbody id="pGradeBody"></tbody>
+    </table>
+    <div class="print-stat-row">
+        <span>Jumlah Pelajar Dinilai: <span id="pJumlah">0</span></span>
+        <span>MIN: <span id="pMin">--</span></span>
+        <span>Sisihan Piawai: <span id="pSD">--</span></span>
+    </div>
+
+    <div class="print-signoff">
+        <div><div class="line">Disediakan Oleh (Pensyarah)</div></div>
+        <div><div class="line">Disahkan Oleh (Ketua Unit Kokurikulum)</div></div>
+    </div>
+    <div class="print-footer-note">Dokumen ini dijana secara automatik oleh Sistem Portal Pemarkahan MPU3221, Unit Kokurikulum IPGKDA. Sulit &amp; Terhad.</div>
+</div>
+
+<div id="printModerationArea">
+    <div class="print-header">
+        <h1>BORANG MODERASI PEMARKAHAN (LAM-PT-04-02)</h1>
+        <h2>INSTITUT PENDIDIKAN GURU KAMPUS DARULAMAN</h2>
+        <div style="font-size:10px; font-weight:700; margin-top:4px;">KOD KURSUS: MPU3221 (PENGURUSAN PERSATUAN)</div>
+    </div>
+    <div class="print-meta">
+        <span><strong>Komponen Moderasi:</strong> <span id="modPTask">--</span></span>
+        <span><strong>Tarikh Semakan:</strong> <span id="modPDate">--</span></span>
+    </div>
+
+    <div class="print-section-title">Senarai 13 Sampel Moderasi (Mewakili Semua Pemeriksa)</div>
+    <table class="print-table">
+        <thead>
+            <tr>
+                <th class="center">Bil</th>
+                <th>Pemeriksa Asal</th>
+                <th>Nama Pelajar (Sampel Terpilih)</th>
+                <th>No. KP</th>
+                <th>Kelas</th>
+                <th class="center">Markah Asal</th>
+                <th class="center">Gred</th>
+                <th class="center">Kelompok</th>
+            </tr>
+        </thead>
+        <tbody id="modPSampleBody"></tbody>
+    </table>
+
+    <div class="print-signoff" style="margin-top:40px;">
+        <div>
+            <div class="line">Disediakan Oleh (Ketua Pemeriksa)</div>
+            <div style="font-size:9px; color:#64748b; margin-top:2px;">Tarikh: ____________________</div>
+        </div>
+        <div>
+            <div class="line">Disahkan Oleh (Ketua Jabatan / Unit)</div>
+            <div style="font-size:9px; color:#64748b; margin-top:2px;">Tarikh: ____________________</div>
+        </div>
+    </div>
+    <div class="print-footer-note">Borang ini dijana secara rasmi di bawah Tatacara Pengurusan Pentaksiran IPGKDA (LAM-PT-04-02). Sulit &amp; Terhad.</div>
+</div>
+
+<div id="printIndividualArea"></div>
+
+</body>
+</html>
